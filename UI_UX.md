@@ -13,6 +13,7 @@ The app is mostly invisible until it needs to show a reminder.
 - Open settings
 - Reconnect Google
 - Pause or resume reminders
+- Change reminder lead time
 - Quit
 
 ### Settings Window

@@ -6,9 +6,13 @@ import type { ArtifactId, GoogleOAuthConfig } from '../../src/shared/contracts';
 interface AppSettings {
   googleOAuth?: GoogleOAuthConfig;
   artifactId?: ArtifactId;
+  reminderLeadMinutes?: number;
 }
 
 const DEFAULT_ARTIFACT_ID: ArtifactId = 'ghost';
+const DEFAULT_REMINDER_LEAD_MINUTES = 5;
+const MIN_REMINDER_LEAD_MINUTES = 1;
+const MAX_REMINDER_LEAD_MINUTES = 60;
 
 function getSettingsPath(): string {
   return path.join(app.getPath('userData'), 'settings.json');
@@ -82,4 +86,26 @@ export function saveArtifactId(artifactId: ArtifactId): ArtifactId {
   fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
   fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
   return settings.artifactId;
+}
+
+function normalizeReminderLeadMinutes(value: number): number {
+  if (!Number.isFinite(value)) {
+    return DEFAULT_REMINDER_LEAD_MINUTES;
+  }
+
+  const rounded = Math.round(value);
+  return Math.min(MAX_REMINDER_LEAD_MINUTES, Math.max(MIN_REMINDER_LEAD_MINUTES, rounded));
+}
+
+export function getReminderLeadMinutes(): number {
+  return normalizeReminderLeadMinutes(readSettings().reminderLeadMinutes ?? DEFAULT_REMINDER_LEAD_MINUTES);
+}
+
+export function saveReminderLeadMinutes(reminderLeadMinutes: number): number {
+  const settings = readSettings();
+  settings.reminderLeadMinutes = normalizeReminderLeadMinutes(reminderLeadMinutes);
+
+  fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
+  return settings.reminderLeadMinutes;
 }

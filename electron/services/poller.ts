@@ -1,9 +1,8 @@
 import type { CalendarEventSummary, ReminderPayload, RuntimeStatus } from '../../src/shared/contracts';
 import { listUpcomingEvents } from './googleAuth';
-import { getArtifactId, getGoogleOAuthConfig } from './settingsStore';
+import { getArtifactId, getGoogleOAuthConfig, getReminderLeadMinutes } from './settingsStore';
 
 const POLL_INTERVAL_MS = 60_000;
-const REMINDER_LEAD_MS = 5 * 60_000;
 const LOOKAHEAD_MS = 30 * 60_000;
 
 type OverlayHandler = (payload: ReminderPayload) => void;
@@ -46,6 +45,7 @@ export class CalendarPoller {
       startupSupported,
       pollerRunning: this.timer !== null,
       paused: this.paused,
+      reminderLeadMinutes: getReminderLeadMinutes(),
       lastPollAt: this.lastPollAt,
       lastPollError: this.lastPollError,
       upcomingCount: this.upcomingCount,
@@ -100,6 +100,7 @@ export class CalendarPoller {
     try {
       const now = new Date();
       const events = await listUpcomingEvents(config, now, new Date(now.getTime() + LOOKAHEAD_MS));
+      const reminderLeadMs = getReminderLeadMinutes() * 60_000;
 
       this.lastPollAt = Date.now();
       this.lastPollError = null;
@@ -115,7 +116,7 @@ export class CalendarPoller {
           continue;
         }
 
-        if (startMs >= now.getTime() && startMs - now.getTime() <= REMINDER_LEAD_MS) {
+        if (startMs >= now.getTime() && startMs - now.getTime() <= reminderLeadMs) {
           this.shown.set(key, startMs);
           this.onReminder(buildReminder(event));
         }

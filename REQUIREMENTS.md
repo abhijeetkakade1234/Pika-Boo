@@ -11,13 +11,13 @@
 - App runs without a main window staying open.
 - App checks for upcoming events every 60 seconds.
 - App identifies events that should trigger reminders.
+- User can choose reminder lead time.
 - App shows a top-of-screen banner reminder.
 - Reminder includes at least event title and relative timing.
 - Reminder auto-hides after 8 seconds.
 
 ### Post-MVP
 
-- User can choose reminder lead time.
 - User can click a reminder to open a meeting link.
 - User can snooze reminders.
 - User can switch animation theme.

@@ -16,6 +16,8 @@ const defaultReminder: ReminderPayload = {
   meetingUrl: 'https://meet.google.com/example-link',
 };
 
+const reminderLeadOptions = [1, 5, 10, 15, 30, 60];
+
 function OverlayView() {
   const [reminder, setReminder] = useState<ReminderPayload>(defaultReminder);
   const [visible, setVisible] = useState(false);
@@ -187,6 +189,20 @@ function ControlPanel() {
     }
   }
 
+  async function saveReminderLeadMinutes(reminderLeadMinutes: number) {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.setReminderLeadMinutes(reminderLeadMinutes);
+      setRuntimeStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to save reminder lead time.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function renderUpcomingEvents() {
     if (!runtimeStatus?.upcomingEvents.length) {
       return <p className="empty-text">No upcoming events loaded yet.</p>;
@@ -317,6 +333,21 @@ function ControlPanel() {
 
         <article className="status-card">
           <h2>Runtime</h2>
+          <label className="field">
+            <span>Reminder lead time</span>
+            <select
+              value={runtimeStatus?.reminderLeadMinutes ?? 5}
+              onChange={(event) => void saveReminderLeadMinutes(Number(event.target.value))}
+              disabled={busy}
+              className="field-select"
+            >
+              {reminderLeadOptions.map((minutes) => (
+                <option key={minutes} value={minutes}>
+                  {minutes} minute{minutes === 1 ? '' : 's'}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="button-row">
             <button
               type="button"
@@ -348,6 +379,10 @@ function ControlPanel() {
             <li>Startup enabled: {runtimeStatus?.startupEnabled ? 'yes' : 'no'}</li>
             <li>Poller running: {runtimeStatus?.pollerRunning ? 'yes' : 'no'}</li>
             <li>Paused: {runtimeStatus?.paused ? 'yes' : 'no'}</li>
+            <li>
+              Reminder lead time: {runtimeStatus?.reminderLeadMinutes ?? 5} minute
+              {(runtimeStatus?.reminderLeadMinutes ?? 5) === 1 ? '' : 's'}
+            </li>
             <li>Upcoming events loaded: {runtimeStatus?.upcomingCount ?? 0}</li>
             <li>Active artifact: {runtimeStatus?.artifactId ?? artifactId}</li>
             <li>

@@ -28,6 +28,7 @@ declare global {
       getRuntimeStatus: () => Promise<RuntimeStatus>;
       setStartupEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
       setPaused: (paused: boolean) => Promise<RuntimeStatus>;
+      setReminderLeadMinutes: (reminderLeadMinutes: number) => Promise<RuntimeStatus>;
       pollNow: () => Promise<RuntimeStatus>;
       onRuntimeUpdated: (callback: () => void) => () => void;
       onOverlayShow: (callback: (payload: ReminderPayload) => void) => () => void;

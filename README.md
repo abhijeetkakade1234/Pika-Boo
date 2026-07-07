@@ -50,6 +50,8 @@ Read these before building:
 - Built-in artifact selector is wired
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
+- Reminder lead time is configurable from the control panel
+- Reminder lead time is also adjustable from the tray menu
 - Reminder artifacts can open meeting links directly
 - Windows startup is only supported in a packaged app, not the dev shell
 - Unpacked Windows packaging is wired and smoke-verified

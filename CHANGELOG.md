@@ -18,3 +18,5 @@
 - Added meeting-link clickthrough directly from reminder artifacts
 - Added snooze and dismiss controls to reminder artifacts
 - Added pause/resume mode for reminders in tray and control panel
+- Added configurable reminder lead time to the control panel and poller runtime
+- Added tray-side reminder lead-time controls for background-only use

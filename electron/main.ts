@@ -11,14 +11,17 @@ import {
   getArtifactId,
   getGoogleOAuthConfig,
   getGoogleOAuthConfigForUi,
+  getReminderLeadMinutes,
   parseGoogleOAuthDesktopClient,
   saveArtifactId,
   saveGoogleOAuthConfig,
+  saveReminderLeadMinutes,
 } from './services/settingsStore';
 import { getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BOO_SMOKE_TEST === '1';
+const REMINDER_LEAD_OPTIONS = [1, 5, 10, 15, 30, 60];
 
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
@@ -175,6 +178,7 @@ function refreshTrayMenu(): void {
   }
 
   const runtime = poller.getStatus(getStartupEnabled(), isStartupSupported());
+  const currentLeadMinutes = runtime.reminderLeadMinutes;
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
@@ -216,6 +220,19 @@ function refreshTrayMenu(): void {
         },
       },
       {
+        label: 'Reminder lead time',
+        submenu: REMINDER_LEAD_OPTIONS.map((minutes) => ({
+          label: `${minutes} minute${minutes === 1 ? '' : 's'}`,
+          type: 'radio',
+          checked: currentLeadMinutes === minutes,
+          click: () => {
+            saveReminderLeadMinutes(minutes);
+            refreshTrayMenu();
+            mainWindow?.webContents.send('runtime:updated');
+          },
+        })),
+      },
+      {
         label: 'Launch on Windows login',
         type: 'checkbox',
         checked: runtime.startupEnabled,
@@ -252,10 +269,11 @@ function wireTray(): void {
 
 function wireIpc(): void {
   ipcMain.handle('app:show-overlay-demo', () => {
+    const reminderLeadMinutes = getReminderLeadMinutes();
     showOverlay({
       reminderId: 'demo-reminder',
       title: 'Meeting with Albert',
-      subtitle: 'Starts in 5 minutes',
+      subtitle: `Starts in ${reminderLeadMinutes} minute${reminderLeadMinutes === 1 ? '' : 's'}`,
       artifactId: getArtifactId(),
     });
   });
@@ -385,6 +403,16 @@ function wireIpc(): void {
 
   ipcMain.handle('runtime:set-paused', (_event, paused: boolean): RuntimeStatus => {
     poller.setPaused(paused);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return {
+      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+      startupSupported: isStartupSupported(),
+    };
+  });
+
+  ipcMain.handle('runtime:set-reminder-lead-minutes', (_event, reminderLeadMinutes: number): RuntimeStatus => {
+    saveReminderLeadMinutes(reminderLeadMinutes);
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return {
