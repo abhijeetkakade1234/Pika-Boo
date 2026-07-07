@@ -37,6 +37,14 @@ Read these before building:
 - `npm run build`
 - `npm run smoke`
 
+## Current State
+
+- Desktop shell is built
+- Overlay reminder is wired
+- Google OAuth flow is wired
+- Calendar polling and startup toggles are wired
+- Live end-to-end verification still needs a real Google desktop OAuth client
+
 ## Google Setup
 
 Create a Google OAuth desktop client and use its client ID in the app before connecting Calendar.

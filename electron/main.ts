@@ -3,9 +3,11 @@ import type { NativeImage } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { ReminderPayload } from '../src/shared/contracts';
-import type { AuthStatus, GoogleOAuthConfig } from '../src/shared/contracts';
+import type { AuthStatus, GoogleOAuthConfig, RuntimeStatus } from '../src/shared/contracts';
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
+import { CalendarPoller } from './services/poller';
 import { getGoogleOAuthConfig, saveGoogleOAuthConfig } from './services/settingsStore';
+import { getStartupEnabled, setStartupEnabled } from './services/startup';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BOO_SMOKE_TEST === '1';
@@ -14,6 +16,11 @@ let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let overlayHideTimer: NodeJS.Timeout | null = null;
+const poller = new CalendarPoller((payload) => {
+  showOverlay(payload);
+  refreshTrayMenu();
+  mainWindow?.webContents.send('runtime:updated');
+});
 
 function getRendererUrl(hash = ''): string {
   const devUrl = process.env.VITE_DEV_SERVER_URL;
@@ -111,9 +118,12 @@ function showOverlay(payload: ReminderPayload): void {
   }, 8000);
 }
 
-function wireTray(): void {
-  tray = new Tray(createTrayIcon());
-  tray.setToolTip('Pika-Boo');
+function refreshTrayMenu(): void {
+  if (!tray) {
+    return;
+  }
+
+  const runtime = poller.getStatus(getStartupEnabled());
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
@@ -132,6 +142,25 @@ function wireTray(): void {
           });
         },
       },
+      {
+        label: 'Sync now',
+        click: () => {
+          void poller.poll().finally(() => {
+            refreshTrayMenu();
+            mainWindow?.webContents.send('runtime:updated');
+          });
+        },
+      },
+      {
+        label: 'Launch on Windows login',
+        type: 'checkbox',
+        checked: runtime.startupEnabled,
+        click: () => {
+          setStartupEnabled(!runtime.startupEnabled);
+          refreshTrayMenu();
+          mainWindow?.webContents.send('runtime:updated');
+        },
+      },
       { type: 'separator' },
       {
         label: 'Quit',
@@ -143,6 +172,12 @@ function wireTray(): void {
       },
     ]),
   );
+}
+
+function wireTray(): void {
+  tray = new Tray(createTrayIcon());
+  tray.setToolTip('Pika-Boo');
+  refreshTrayMenu();
 
   tray.on('double-click', () => {
     mainWindow?.show();
@@ -179,13 +214,36 @@ function wireIpc(): void {
       throw new Error('Save a Google OAuth client ID first.');
     }
 
-    return beginGoogleOAuth(config);
+    const status = await beginGoogleOAuth(config);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return status;
   });
 
   ipcMain.handle('auth:disconnect', (): AuthStatus => {
     const config = getGoogleOAuthConfig();
     clearGoogleTokens();
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
     return getAuthStatus(config);
+  });
+
+  ipcMain.handle('runtime:get-status', (): RuntimeStatus => {
+    return poller.getStatus(getStartupEnabled());
+  });
+
+  ipcMain.handle('runtime:set-startup-enabled', (_event, enabled: boolean): RuntimeStatus => {
+    setStartupEnabled(enabled);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return poller.getStatus(getStartupEnabled());
+  });
+
+  ipcMain.handle('runtime:poll-now', async (): Promise<RuntimeStatus> => {
+    await poller.poll();
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return poller.getStatus(getStartupEnabled());
   });
 }
 
@@ -196,6 +254,7 @@ async function bootstrap(): Promise<void> {
   overlayWindow = createOverlayWindow();
   wireTray();
   wireIpc();
+  poller.start();
 
   if (isSmokeTest) {
     mainWindow.hide();
@@ -213,6 +272,7 @@ async function bootstrap(): Promise<void> {
     if (BrowserWindow.getAllWindows().length === 0) {
       mainWindow = createMainWindow();
       overlayWindow = createOverlayWindow();
+      refreshTrayMenu();
     } else {
       mainWindow?.show();
     }

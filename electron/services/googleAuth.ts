@@ -6,7 +6,7 @@ import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { URL } from 'node:url';
 import { app } from 'electron';
-import type { AuthStatus, GoogleOAuthConfig } from '../../src/shared/contracts';
+import type { AuthStatus, CalendarEventSummary, GoogleOAuthConfig } from '../../src/shared/contracts';
 
 const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -26,6 +26,25 @@ interface TokenResponse {
   refresh_token?: string;
   scope?: string;
   token_type?: string;
+}
+
+interface GoogleCalendarEvent {
+  id: string;
+  summary?: string;
+  start?: {
+    dateTime?: string;
+    date?: string;
+  };
+  hangoutLink?: string;
+  conferenceData?: {
+    entryPoints?: Array<{
+      uri?: string;
+    }>;
+  };
+}
+
+interface EventsListResponse {
+  items?: GoogleCalendarEvent[];
 }
 
 function getTokenPath(): string {
@@ -53,6 +72,41 @@ function readTokens(): StoredTokens | null {
 function writeTokens(tokens: StoredTokens): void {
   fs.mkdirSync(path.dirname(getTokenPath()), { recursive: true });
   fs.writeFileSync(getTokenPath(), JSON.stringify(tokens, null, 2), 'utf8');
+}
+
+async function refreshAccessToken(config: GoogleOAuthConfig, refreshToken: string): Promise<StoredTokens> {
+  const body = new URLSearchParams({
+    client_id: config.clientId,
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+  });
+
+  if (config.clientSecret) {
+    body.set('client_secret', config.clientSecret);
+  }
+
+  const response = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Token refresh failed with ${response.status}.`);
+  }
+
+  const tokenResponse = (await response.json()) as TokenResponse;
+
+  const nextTokens: StoredTokens = {
+    accessToken: tokenResponse.access_token,
+    refreshToken,
+    expiresAt: tokenResponse.expires_in ? Date.now() + tokenResponse.expires_in * 1000 : null,
+    scope: tokenResponse.scope,
+    tokenType: tokenResponse.token_type,
+  };
+
+  writeTokens(nextTokens);
+  return nextTokens;
 }
 
 async function startAuthorizationServer(): Promise<{
@@ -185,4 +239,64 @@ export function clearGoogleTokens(): AuthStatus {
   }
 
   return getAuthStatus(null);
+}
+
+export async function getValidAccessToken(config: GoogleOAuthConfig): Promise<string> {
+  const tokens = readTokens();
+
+  if (!tokens) {
+    throw new Error('Google account is not connected.');
+  }
+
+  const hasUsableAccessToken = Boolean(tokens.accessToken) && Boolean(tokens.expiresAt && tokens.expiresAt > Date.now() + 30_000);
+  if (hasUsableAccessToken) {
+    return tokens.accessToken;
+  }
+
+  if (!tokens.refreshToken) {
+    throw new Error('Google token expired and no refresh token is available.');
+  }
+
+  const refreshed = await refreshAccessToken(config, tokens.refreshToken);
+  return refreshed.accessToken;
+}
+
+export async function listUpcomingEvents(config: GoogleOAuthConfig, timeMin: Date, timeMax: Date): Promise<CalendarEventSummary[]> {
+  const accessToken = await getValidAccessToken(config);
+  const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+  url.searchParams.set('singleEvents', 'true');
+  url.searchParams.set('orderBy', 'startTime');
+  url.searchParams.set('timeMin', timeMin.toISOString());
+  url.searchParams.set('timeMax', timeMax.toISOString());
+  url.searchParams.set('maxResults', '20');
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Calendar fetch failed with ${response.status}.`);
+  }
+
+  const payload = (await response.json()) as EventsListResponse;
+
+  return (payload.items ?? [])
+    .map((event): CalendarEventSummary | null => {
+      const startAt = event.start?.dateTime ?? event.start?.date;
+      if (!event.id || !startAt) {
+        return null;
+      }
+
+      const meetingUrl = event.hangoutLink ?? event.conferenceData?.entryPoints?.find((entry) => entry.uri)?.uri;
+
+      return {
+        id: event.id,
+        summary: event.summary?.trim() || 'Untitled event',
+        startAt,
+        meetingUrl,
+      };
+    })
+    .filter((event): event is CalendarEventSummary => event !== null);
 }

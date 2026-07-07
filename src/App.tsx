@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { AuthStatus, GoogleOAuthConfig, ReminderPayload } from './shared/contracts';
+import type { AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } from './shared/contracts';
 
 const defaultReminder: ReminderPayload = {
   title: 'Continue Breaking Ice redesign',
@@ -37,18 +37,28 @@ function OverlayView() {
 function ControlPanel() {
   const [config, setConfig] = useState<GoogleOAuthConfig>({ clientId: '', clientSecret: '' });
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
+  const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    window.pikaBoo
-      .getAuthStatus()
-      .then((status) => {
-        setAuthStatus(status);
-      })
-      .catch((reason: unknown) => {
-        setError(reason instanceof Error ? reason.message : 'Failed to load auth status.');
-      });
+    async function loadStatus() {
+      const [nextAuth, nextRuntime] = await Promise.all([
+        window.pikaBoo.getAuthStatus(),
+        window.pikaBoo.getRuntimeStatus(),
+      ]);
+
+      setAuthStatus(nextAuth);
+      setRuntimeStatus(nextRuntime);
+    }
+
+    loadStatus().catch((reason: unknown) => {
+      setError(reason instanceof Error ? reason.message : 'Failed to load app status.');
+    });
+
+    return window.pikaBoo.onRuntimeUpdated(() => {
+      void loadStatus();
+    });
   }, []);
 
   async function saveConfig() {
@@ -58,6 +68,7 @@ function ControlPanel() {
     try {
       const status = await window.pikaBoo.saveGoogleOAuthConfig(config);
       setAuthStatus(status);
+      setRuntimeStatus(await window.pikaBoo.getRuntimeStatus());
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Failed to save config.');
     } finally {
@@ -72,6 +83,7 @@ function ControlPanel() {
     try {
       const status = await window.pikaBoo.connectGoogle();
       setAuthStatus(status);
+      setRuntimeStatus(await window.pikaBoo.getRuntimeStatus());
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Google sign-in failed.');
     } finally {
@@ -86,8 +98,37 @@ function ControlPanel() {
     try {
       const status = await window.pikaBoo.disconnectGoogle();
       setAuthStatus(status);
+      setRuntimeStatus(await window.pikaBoo.getRuntimeStatus());
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Disconnect failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleStartup() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.setStartupEnabled(!runtimeStatus?.startupEnabled);
+      setRuntimeStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to update startup setting.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function pollNow() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.pollNow();
+      setRuntimeStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Manual poll failed.');
     } finally {
       setBusy(false);
     }
@@ -169,11 +210,34 @@ function ControlPanel() {
           </ul>
         </article>
         <article className="status-card">
-          <h2>Next build slice</h2>
+          <h2>Runtime</h2>
+          <div className="button-row">
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={busy}
+              onClick={() => void pollNow()}
+            >
+              Poll calendar now
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={busy}
+              onClick={() => void toggleStartup()}
+            >
+              {runtimeStatus?.startupEnabled ? 'Disable startup' : 'Enable startup'}
+            </button>
+          </div>
           <ul>
-            <li>Calendar polling</li>
-            <li>Real reminder scheduling</li>
-            <li>Windows startup</li>
+            <li>Startup enabled: {runtimeStatus?.startupEnabled ? 'yes' : 'no'}</li>
+            <li>Poller running: {runtimeStatus?.pollerRunning ? 'yes' : 'no'}</li>
+            <li>Upcoming events loaded: {runtimeStatus?.upcomingCount ?? 0}</li>
+            <li>
+              Last poll:{' '}
+              {runtimeStatus?.lastPollAt ? new Date(runtimeStatus.lastPollAt).toLocaleTimeString() : 'never'}
+            </li>
+            <li>Last poll error: {runtimeStatus?.lastPollError ?? 'none'}</li>
           </ul>
         </article>
       </section>

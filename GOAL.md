@@ -18,6 +18,9 @@ Build a Windows desktop app that makes upcoming Google Calendar events hard to m
 - Tray menu
 - Transparent overlay window
 - Local reminder demo path
+- Google OAuth desktop-flow wiring
+- Calendar polling and duplicate reminder suppression wiring
+- Windows startup toggle wiring
 
 ## Build Order
 

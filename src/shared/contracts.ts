@@ -14,3 +14,18 @@ export interface AuthStatus {
   hasRefreshToken: boolean;
   expiresAt: number | null;
 }
+
+export interface CalendarEventSummary {
+  id: string;
+  summary: string;
+  startAt: string;
+  meetingUrl?: string;
+}
+
+export interface RuntimeStatus {
+  startupEnabled: boolean;
+  pollerRunning: boolean;
+  lastPollAt: number | null;
+  lastPollError: string | null;
+  upcomingCount: number;
+}
