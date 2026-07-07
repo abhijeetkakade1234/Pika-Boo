@@ -21,6 +21,7 @@ function buildReminder(event: CalendarEventSummary): ReminderPayload {
     title: event.summary,
     subtitle: deltaMinutes <= 0 ? 'Starting now' : `Starts in ${deltaMinutes} minute${deltaMinutes === 1 ? '' : 's'}`,
     artifactId: getArtifactId(),
+    meetingUrl: event.meetingUrl,
   };
 }
 

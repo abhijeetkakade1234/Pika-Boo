@@ -4,6 +4,7 @@ export interface ReminderPayload {
   title: string;
   subtitle: string;
   artifactId: ArtifactId;
+  meetingUrl?: string;
 }
 
 export interface GoogleOAuthConfig {

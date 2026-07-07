@@ -63,4 +63,4 @@ Fallback if timing text is not useful:
 
 - Banner should not steal keyboard focus.
 - Banner should not block the whole screen width unless animation needs it.
-- Clicking the banner is optional in MVP and can be added later.
+- Clicking a reminder artifact can open the meeting link when one exists.

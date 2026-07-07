@@ -12,6 +12,7 @@ const defaultReminder: ReminderPayload = {
   title: 'Continue Breaking Ice redesign',
   subtitle: 'Focus block starts now',
   artifactId: 'ghost',
+  meetingUrl: 'https://meet.google.com/example-link',
 };
 
 function OverlayView() {

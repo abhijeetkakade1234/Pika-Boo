@@ -15,3 +15,4 @@
 - Replaced the plain overlay banner with a persisted artifact system
 - Split artifact rendering into dedicated renderer-side definitions and selector wiring
 - Added import of Google desktop OAuth client JSON for faster end-to-end setup
+- Added meeting-link clickthrough directly from reminder artifacts

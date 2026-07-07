@@ -68,6 +68,7 @@ Progress:
 - Overlay now uses an artifact system instead of a plain banner
 - Selected artifact is persisted and used by demo plus real reminders
 - Artifact definitions are split into renderer-side files instead of one inline overlay block
+- Reminder artifacts can open meeting links directly when the event has one
 
 ### Task 5: Windows Startup
 

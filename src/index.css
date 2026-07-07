@@ -230,6 +230,7 @@ button:disabled {
   border-radius: 18px;
   background: rgba(15, 23, 42, 0.9);
   box-shadow: 0 14px 36px rgba(15, 23, 42, 0.45);
+  text-align: left;
 }
 
 .artifact-run__title {
@@ -240,6 +241,21 @@ button:disabled {
 .artifact-run__subtitle {
   margin-top: 4px;
   color: #cbd5e1;
+}
+
+.artifact-run__message--clickable {
+  cursor: pointer;
+}
+
+.artifact-run__message--clickable:hover {
+  border-color: rgba(125, 211, 252, 0.6);
+  transform: translateY(-1px);
+}
+
+.artifact-run__hint {
+  margin-top: 6px;
+  color: #7dd3fc;
+  font-size: 0.82rem;
 }
 
 .artifact--ghost .artifact-run__track {

@@ -35,10 +35,22 @@ export function ArtifactOverlay({
         <div className="artifact-run__lead">{artifact.lead}</div>
         <div className="artifact-run__body">
           <div className="artifact-run__track">{artifact.trail}</div>
-          <div className="artifact-run__message">
+          <button
+            type="button"
+            className={`artifact-run__message ${reminder.meetingUrl ? 'artifact-run__message--clickable' : ''}`}
+            disabled={!reminder.meetingUrl}
+            onClick={() => {
+              if (reminder.meetingUrl) {
+                void window.pikaBoo.openExternal(reminder.meetingUrl);
+              }
+            }}
+          >
             <div className="artifact-run__title">{reminder.title}</div>
             <div className="artifact-run__subtitle">{reminder.subtitle}</div>
-          </div>
+            {reminder.meetingUrl ? (
+              <div className="artifact-run__hint">Click artifact to open meeting</div>
+            ) : null}
+          </button>
           <div className="artifact-run__track">{artifact.trail}</div>
         </div>
       </div>
