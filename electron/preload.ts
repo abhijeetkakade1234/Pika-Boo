@@ -4,6 +4,7 @@ import type { AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } fr
 contextBridge.exposeInMainWorld('pikaBoo', {
   showOverlayDemo: () => ipcRenderer.invoke('app:show-overlay-demo'),
   openSettings: () => ipcRenderer.invoke('app:open-settings'),
+  openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
   getAuthStatus: () => ipcRenderer.invoke('auth:get-status') as Promise<AuthStatus>,
   getGoogleOAuthConfig: () => ipcRenderer.invoke('auth:get-config') as Promise<GoogleOAuthConfig>,
   saveGoogleOAuthConfig: (config: GoogleOAuthConfig) => ipcRenderer.invoke('auth:save-config', config),

@@ -30,4 +30,5 @@ export interface RuntimeStatus {
   lastPollAt: number | null;
   lastPollError: string | null;
   upcomingCount: number;
+  upcomingEvents: CalendarEventSummary[];
 }

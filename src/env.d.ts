@@ -7,6 +7,7 @@ declare global {
     pikaBoo: {
       showOverlayDemo: () => Promise<void>;
       openSettings: () => Promise<void>;
+      openExternal: (url: string) => Promise<void>;
       getAuthStatus: () => Promise<AuthStatus>;
       getGoogleOAuthConfig: () => Promise<GoogleOAuthConfig>;
       saveGoogleOAuthConfig: (config: GoogleOAuthConfig) => Promise<AuthStatus>;

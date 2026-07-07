@@ -49,6 +49,7 @@ Progress:
 - Duplicate reminders are suppressed by event id plus start time
 - Runtime status now refreshes from background poll cycles
 - Smoke verification now launches the built Electron app and catches renderer-load regressions
+- Control panel now shows the fetched upcoming events instead of only a count
 - Live event fetch still needs a connected Google account to verify end-to-end
 
 ### Task 4: Reminder Overlay
@@ -89,7 +90,6 @@ Progress:
 
 ## Backlog
 
-- Meeting-link clickthrough
 - Snooze
 - Theme variants
 - Multi-account

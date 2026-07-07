@@ -136,6 +136,34 @@ function ControlPanel() {
     }
   }
 
+  function renderUpcomingEvents() {
+    if (!runtimeStatus?.upcomingEvents.length) {
+      return <p className="empty-text">No upcoming events loaded yet.</p>;
+    }
+
+    return (
+      <div className="events-list">
+        {runtimeStatus.upcomingEvents.map((event) => (
+          <article key={`${event.id}:${event.startAt}`} className="event-card">
+            <div>
+              <div className="event-card__title">{event.summary}</div>
+              <div className="event-card__meta">{new Date(event.startAt).toLocaleString()}</div>
+            </div>
+            {event.meetingUrl ? (
+              <button
+                type="button"
+                className="button-secondary"
+                onClick={() => void window.pikaBoo.openExternal(event.meetingUrl!)}
+              >
+                Open link
+              </button>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <main className="app-shell">
       <section className="hero-card">
@@ -243,6 +271,10 @@ function ControlPanel() {
             </li>
             <li>Last poll error: {runtimeStatus?.lastPollError ?? 'none'}</li>
           </ul>
+        </article>
+        <article className="status-card status-card--wide">
+          <h2>Upcoming events</h2>
+          {renderUpcomingEvents()}
         </article>
       </section>
     </main>

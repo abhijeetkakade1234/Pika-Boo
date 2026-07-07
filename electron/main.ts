@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen } from 'electron';
+import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen, shell } from 'electron';
 import type { NativeImage } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -201,6 +201,14 @@ function wireIpc(): void {
   ipcMain.handle('app:open-settings', () => {
     mainWindow?.show();
     mainWindow?.focus();
+  });
+
+  ipcMain.handle('app:open-external', (_event, url: string) => {
+    if (!/^https?:\/\//i.test(url)) {
+      throw new Error('Only http and https links are supported.');
+    }
+
+    return shell.openExternal(url);
   });
 
   ipcMain.handle('auth:get-status', (): AuthStatus => {

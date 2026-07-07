@@ -97,6 +97,10 @@ button:disabled {
   padding: 24px;
 }
 
+.status-card--wide {
+  grid-column: 1 / -1;
+}
+
 .status-card h2 {
   margin-top: 0;
 }
@@ -143,6 +147,36 @@ button:disabled {
 .error-text {
   margin-bottom: 0;
   color: #fda4af;
+}
+
+.empty-text {
+  color: #94a3b8;
+}
+
+.events-list {
+  display: grid;
+  gap: 12px;
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.event-card__title {
+  font-weight: 700;
+}
+
+.event-card__meta {
+  margin-top: 4px;
+  color: #94a3b8;
+  font-size: 0.92rem;
 }
 
 .overlay-shell {
