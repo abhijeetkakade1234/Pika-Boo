@@ -22,3 +22,4 @@
 - Added tray-side reminder lead-time controls for background-only use
 - Added cat, paper-plane, and santa built-in reminder artifacts
 - Added inline artifact previews to the control panel
+- Added NSIS installer build and installer-artifact smoke verification

@@ -25,12 +25,13 @@ Build a Windows desktop app that makes upcoming Google Calendar events hard to m
 - Reminder actions for meeting-link open, snooze, and dismiss
 - Windows startup toggle wiring
 - Unpacked Windows packaging plus packaged smoke-launch verification
+- NSIS installer build plus installer-artifact smoke verification
 
 ## What still blocks true MVP done
 
 - Live Google OAuth sign-in still needs a real desktop client to verify end to end
 - Live calendar fetch still needs a connected Google account to verify against real events
-- Installer-level Windows startup still needs verification outside the smoke package path
+- Installed-run Windows startup still needs verification after a real installer install
 
 ## Build Order
 

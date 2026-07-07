@@ -90,13 +90,15 @@ Progress:
 - Tray and control-panel controls are wired
 - Dev-shell startup is intentionally blocked because only packaged builds can reboot correctly
 - `win-unpacked` packaging and packaged exe smoke launch now pass
-- Installer-level verification is still pending
+- NSIS installer build now emits a real installer exe
+- Installed-run startup verification is still pending
 
 ## Verification Notes
 
 - `npm run build` passes
 - `npm run smoke` passes
 - `npm run package:smoke` passes
+- `npm run package:installer:smoke` passes
 - Tray menu and overlay demo path are wired in the Electron shell
 - Poll-now control and startup toggle are wired in the Electron shell
 - Smoke now includes a real built-Electron launch check

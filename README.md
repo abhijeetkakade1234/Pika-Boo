@@ -38,9 +38,12 @@ Read these before building:
 - `npm run smoke`
 - `npm run package:dir`
 - `npm run package:smoke`
+- `npm run package:installer`
+- `npm run package:installer:smoke`
 
 `npm run smoke` now launches the built Electron app in a smoke-test mode and fails on renderer load errors.
 `npm run package:smoke` builds `release/win-unpacked` and smoke-launches the packaged exe.
+`npm run package:installer:smoke` builds the NSIS installer and asserts the installer exe is emitted.
 
 ## Current State
 
@@ -56,6 +59,7 @@ Read these before building:
 - Reminder artifacts can open meeting links directly
 - Windows startup is only supported in a packaged app, not the dev shell
 - Unpacked Windows packaging is wired and smoke-verified
+- NSIS installer build is wired with installer-artifact smoke verification
 - Live end-to-end verification still needs a real Google desktop OAuth client
 
 ## Google Setup
