@@ -1,0 +1,159 @@
+:root {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #f3f4f6;
+  background:
+    radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(250, 204, 21, 0.18), transparent 22%),
+    #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.3rem;
+  font: inherit;
+  font-weight: 700;
+  color: #0f172a;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+.app-shell {
+  padding: 32px;
+}
+
+.hero-card,
+.status-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.hero-card {
+  max-width: 760px;
+  padding: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.hero-card h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 8vw, 4.8rem);
+}
+
+.lede {
+  max-width: 52ch;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+}
+
+.cta-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+
+.status-card {
+  padding: 24px;
+}
+
+.status-card h2 {
+  margin-top: 0;
+}
+
+.status-card ul {
+  padding-left: 18px;
+  color: #cbd5e1;
+}
+
+.overlay-shell {
+  width: 100vw;
+  height: 96px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.overlay-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 420px;
+  max-width: min(720px, calc(100vw - 32px));
+  margin-top: 14px;
+  padding: 16px 22px;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  border-radius: 999px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.92);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.45);
+  transform: translateX(-120%);
+}
+
+.overlay-banner--visible {
+  animation: fly-across 8s linear forwards;
+}
+
+.overlay-banner__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.18);
+  font-size: 1.2rem;
+}
+
+.overlay-banner__title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.overlay-banner__subtitle {
+  margin-top: 4px;
+  color: #cbd5e1;
+}
+
+@keyframes fly-across {
+  from {
+    transform: translateX(-120%);
+  }
+
+  to {
+    transform: translateX(calc(100vw + 32px));
+  }
+}

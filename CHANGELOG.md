@@ -1,0 +1,8 @@
+# Changelog
+
+## Unreleased
+
+- Added product and engineering documentation baseline
+- Defined MVP scope, architecture, and first task queue
+- Added Electron + React + TypeScript scaffold
+- Added tray menu and transparent overlay demo shell
