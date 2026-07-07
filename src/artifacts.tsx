@@ -51,6 +51,22 @@ export function ArtifactOverlay({
               <div className="artifact-run__hint">Click artifact to open meeting</div>
             ) : null}
           </button>
+          <div className="artifact-run__actions">
+            <button
+              type="button"
+              className="artifact-run__action"
+              onClick={() => void window.pikaBoo.snoozeReminder(reminder.reminderId, 5)}
+            >
+              Snooze 5m
+            </button>
+            <button
+              type="button"
+              className="artifact-run__action"
+              onClick={() => void window.pikaBoo.dismissReminder(reminder.reminderId)}
+            >
+              Dismiss
+            </button>
+          </div>
           <div className="artifact-run__track">{artifact.trail}</div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import type {
 } from './shared/contracts';
 
 const defaultReminder: ReminderPayload = {
+  reminderId: 'demo-reminder',
   title: 'Continue Breaking Ice redesign',
   subtitle: 'Focus block starts now',
   artifactId: 'ghost',

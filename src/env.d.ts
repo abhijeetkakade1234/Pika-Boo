@@ -15,6 +15,8 @@ declare global {
       showOverlayDemo: () => Promise<void>;
       openSettings: () => Promise<void>;
       openExternal: (url: string) => Promise<void>;
+      snoozeReminder: (reminderId: string, minutes: number) => Promise<void>;
+      dismissReminder: (reminderId: string) => Promise<void>;
       getSelectedArtifact: () => Promise<ArtifactId>;
       setSelectedArtifact: (artifactId: ArtifactId) => Promise<RuntimeStatus>;
       getAuthStatus: () => Promise<AuthStatus>;

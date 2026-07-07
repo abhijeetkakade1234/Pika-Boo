@@ -24,6 +24,8 @@ let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let overlayHideTimer: NodeJS.Timeout | null = null;
+let currentReminder: ReminderPayload | null = null;
+const snoozeTimers = new Map<string, NodeJS.Timeout>();
 const poller = new CalendarPoller(
   (payload) => {
     showOverlay(payload);
@@ -118,6 +120,7 @@ function showOverlay(payload: ReminderPayload): void {
     return;
   }
 
+  currentReminder = payload;
   overlayWindow.showInactive();
   overlayWindow.webContents.send('overlay:show', payload);
 
@@ -128,6 +131,42 @@ function showOverlay(payload: ReminderPayload): void {
   overlayHideTimer = setTimeout(() => {
     overlayWindow?.hide();
   }, 8000);
+}
+
+function hideOverlay(): void {
+  overlayWindow?.hide();
+}
+
+function snoozeReminder(reminderId: string, minutes: number): void {
+  if (!currentReminder || currentReminder.reminderId !== reminderId) {
+    return;
+  }
+
+  const existingTimer = snoozeTimers.get(reminderId);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+  }
+
+  hideOverlay();
+  const payload = currentReminder;
+  const timer = setTimeout(() => {
+    snoozeTimers.delete(reminderId);
+    showOverlay(payload);
+  }, minutes * 60_000);
+
+  snoozeTimers.set(reminderId, timer);
+}
+
+function dismissReminder(reminderId: string): void {
+  const existingTimer = snoozeTimers.get(reminderId);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+    snoozeTimers.delete(reminderId);
+  }
+
+  if (currentReminder?.reminderId === reminderId) {
+    hideOverlay();
+  }
 }
 
 function refreshTrayMenu(): void {
@@ -149,6 +188,7 @@ function refreshTrayMenu(): void {
         label: 'Show reminder demo',
         click: () => {
           showOverlay({
+            reminderId: 'demo-reminder',
             title: 'Continue building Pika-Boo',
             subtitle: 'Scaffold is live. Overlay is moving.',
             artifactId: getArtifactId(),
@@ -202,6 +242,7 @@ function wireTray(): void {
 function wireIpc(): void {
   ipcMain.handle('app:show-overlay-demo', () => {
     showOverlay({
+      reminderId: 'demo-reminder',
       title: 'Meeting with Albert',
       subtitle: 'Starts in 5 minutes',
       artifactId: getArtifactId(),
@@ -219,6 +260,14 @@ function wireIpc(): void {
     }
 
     return shell.openExternal(url);
+  });
+
+  ipcMain.handle('app:snooze-reminder', (_event, reminderId: string, minutes: number) => {
+    snoozeReminder(reminderId, minutes);
+  });
+
+  ipcMain.handle('app:dismiss-reminder', (_event, reminderId: string) => {
+    dismissReminder(reminderId);
   });
 
   ipcMain.handle('auth:get-status', (): AuthStatus => {
@@ -336,6 +385,7 @@ async function bootstrap(): Promise<void> {
   if (isSmokeTest) {
     mainWindow.hide();
     showOverlay({
+      reminderId: 'smoke-test',
       title: 'Smoke test',
       subtitle: 'Windows created successfully',
       artifactId: getArtifactId(),

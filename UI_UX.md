@@ -64,3 +64,4 @@ Fallback if timing text is not useful:
 - Banner should not steal keyboard focus.
 - Banner should not block the whole screen width unless animation needs it.
 - Clicking a reminder artifact can open the meeting link when one exists.
+- Reminder can be snoozed or dismissed from the overlay itself.

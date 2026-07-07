@@ -18,6 +18,7 @@ function buildReminder(event: CalendarEventSummary): ReminderPayload {
   const deltaMinutes = Math.max(0, Math.round(deltaMs / 60_000));
 
   return {
+    reminderId: reminderKey(event),
     title: event.summary,
     subtitle: deltaMinutes <= 0 ? 'Starting now' : `Starts in ${deltaMinutes} minute${deltaMinutes === 1 ? '' : 's'}`,
     artifactId: getArtifactId(),

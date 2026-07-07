@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('pikaBoo', {
   showOverlayDemo: () => ipcRenderer.invoke('app:show-overlay-demo'),
   openSettings: () => ipcRenderer.invoke('app:open-settings'),
   openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
+  snoozeReminder: (reminderId: string, minutes: number) =>
+    ipcRenderer.invoke('app:snooze-reminder', reminderId, minutes) as Promise<void>,
+  dismissReminder: (reminderId: string) =>
+    ipcRenderer.invoke('app:dismiss-reminder', reminderId) as Promise<void>,
   getSelectedArtifact: () => ipcRenderer.invoke('artifact:get-selected') as Promise<ArtifactId>,
   setSelectedArtifact: (artifactId: ArtifactId) =>
     ipcRenderer.invoke('artifact:set-selected', artifactId) as Promise<RuntimeStatus>,

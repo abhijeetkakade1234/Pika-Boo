@@ -258,6 +258,20 @@ button:disabled {
   font-size: 0.82rem;
 }
 
+.artifact-run__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.artifact-run__action {
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: #e2e8f0;
+  background: rgba(56, 189, 248, 0.16);
+}
+
 .artifact--ghost .artifact-run__track {
   color: #c4b5fd;
 }

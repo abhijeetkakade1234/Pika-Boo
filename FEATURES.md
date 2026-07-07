@@ -39,6 +39,7 @@ Acceptance:
 - Reminder content is readable.
 - Reminder hides itself after the animation window ends.
 - Reminder can open a meeting link when the event has one.
+- Reminder can be snoozed or dismissed locally.
 
 ## Startup Launch
 
