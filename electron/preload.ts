@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('pikaBoo', {
   showOverlayDemo: () => ipcRenderer.invoke('app:show-overlay-demo'),
   openSettings: () => ipcRenderer.invoke('app:open-settings'),
   getAuthStatus: () => ipcRenderer.invoke('auth:get-status') as Promise<AuthStatus>,
+  getGoogleOAuthConfig: () => ipcRenderer.invoke('auth:get-config') as Promise<GoogleOAuthConfig>,
   saveGoogleOAuthConfig: (config: GoogleOAuthConfig) => ipcRenderer.invoke('auth:save-config', config),
   connectGoogle: () => ipcRenderer.invoke('auth:connect') as Promise<AuthStatus>,
   disconnectGoogle: () => ipcRenderer.invoke('auth:disconnect') as Promise<AuthStatus>,

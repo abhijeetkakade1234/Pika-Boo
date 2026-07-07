@@ -42,3 +42,7 @@ export function getGoogleOAuthConfig(): GoogleOAuthConfig | null {
 
   return config;
 }
+
+export function getGoogleOAuthConfigForUi(): GoogleOAuthConfig {
+  return getGoogleOAuthConfig() ?? { clientId: '', clientSecret: '' };
+}

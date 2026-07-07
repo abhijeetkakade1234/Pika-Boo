@@ -1,4 +1,4 @@
-import { shell } from 'electron';
+import { safeStorage, shell } from 'electron';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -66,11 +66,30 @@ function readTokens(): StoredTokens | null {
     return null;
   }
 
-  return JSON.parse(fs.readFileSync(tokenPath, 'utf8')) as StoredTokens;
+  const raw = fs.readFileSync(tokenPath, 'utf8');
+
+  if (raw.startsWith('{')) {
+    return JSON.parse(raw) as StoredTokens;
+  }
+
+  if (!safeStorage.isEncryptionAvailable()) {
+    throw new Error('Stored Google token is encrypted, but secure storage is unavailable.');
+  }
+
+  const decrypted = safeStorage.decryptString(Buffer.from(raw, 'base64'));
+  return JSON.parse(decrypted) as StoredTokens;
 }
 
 function writeTokens(tokens: StoredTokens): void {
   fs.mkdirSync(path.dirname(getTokenPath()), { recursive: true });
+  const payload = JSON.stringify(tokens);
+
+  if (safeStorage.isEncryptionAvailable()) {
+    const encrypted = safeStorage.encryptString(payload).toString('base64');
+    fs.writeFileSync(getTokenPath(), encrypted, 'utf8');
+    return;
+  }
+
   fs.writeFileSync(getTokenPath(), JSON.stringify(tokens, null, 2), 'utf8');
 }
 
@@ -204,6 +223,7 @@ export function getAuthStatus(config: GoogleOAuthConfig | null): AuthStatus {
     connected: Boolean(tokens?.accessToken || tokens?.refreshToken),
     hasRefreshToken: Boolean(tokens?.refreshToken),
     expiresAt: tokens?.expiresAt ?? null,
+    secureStorageAvailable: safeStorage.isEncryptionAvailable(),
   };
 }
 

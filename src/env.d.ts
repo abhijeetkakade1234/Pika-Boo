@@ -8,6 +8,7 @@ declare global {
       showOverlayDemo: () => Promise<void>;
       openSettings: () => Promise<void>;
       getAuthStatus: () => Promise<AuthStatus>;
+      getGoogleOAuthConfig: () => Promise<GoogleOAuthConfig>;
       saveGoogleOAuthConfig: (config: GoogleOAuthConfig) => Promise<AuthStatus>;
       connectGoogle: () => Promise<AuthStatus>;
       disconnectGoogle: () => Promise<AuthStatus>;

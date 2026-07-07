@@ -28,6 +28,8 @@ Progress:
 - Client config is stored locally
 - Token persistence is wired
 - Token refresh is wired
+- Saved OAuth config now round-trips back into the UI
+- Token storage uses Electron secure storage when available
 - Live sign-in still needs a real Google desktop client ID to verify end-to-end
 
 ### Task 3: Calendar Poller
@@ -45,6 +47,7 @@ Progress:
 - Main-process poller runs every 60 seconds
 - Google Calendar `events.list` fetch is wired for the primary calendar
 - Duplicate reminders are suppressed by event id plus start time
+- Runtime status now refreshes from background poll cycles
 - Live event fetch still needs a connected Google account to verify end-to-end
 
 ### Task 4: Reminder Overlay

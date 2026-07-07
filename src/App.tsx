@@ -43,13 +43,15 @@ function ControlPanel() {
 
   useEffect(() => {
     async function loadStatus() {
-      const [nextAuth, nextRuntime] = await Promise.all([
+      const [nextAuth, nextRuntime, nextConfig] = await Promise.all([
         window.pikaBoo.getAuthStatus(),
         window.pikaBoo.getRuntimeStatus(),
+        window.pikaBoo.getGoogleOAuthConfig(),
       ]);
 
       setAuthStatus(nextAuth);
       setRuntimeStatus(nextRuntime);
+      setConfig(nextConfig);
     }
 
     loadStatus().catch((reason: unknown) => {
@@ -198,6 +200,7 @@ function ControlPanel() {
             <li>Configured: {authStatus?.configured ? 'yes' : 'no'}</li>
             <li>Connected: {authStatus?.connected ? 'yes' : 'no'}</li>
             <li>Refresh token saved: {authStatus?.hasRefreshToken ? 'yes' : 'no'}</li>
+            <li>Secure token storage: {authStatus?.secureStorageAvailable ? 'yes' : 'fallback'}</li>
           </ul>
           {error ? <p className="error-text">{error}</p> : null}
         </article>

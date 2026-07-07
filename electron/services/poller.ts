@@ -30,7 +30,10 @@ export class CalendarPoller {
   private lastPollError: string | null = null;
   private upcomingCount = 0;
 
-  constructor(private readonly onReminder: OverlayHandler) {}
+  constructor(
+    private readonly onReminder: OverlayHandler,
+    private readonly onStatusChange: () => void,
+  ) {}
 
   getStatus(startupEnabled: boolean): RuntimeStatus {
     return {
@@ -68,6 +71,7 @@ export class CalendarPoller {
       this.lastPollError = 'Google OAuth is not configured.';
       this.upcomingCount = 0;
       this.lastPollAt = Date.now();
+      this.onStatusChange();
       return;
     }
 
@@ -93,9 +97,12 @@ export class CalendarPoller {
           this.onReminder(buildReminder(event));
         }
       }
+
+      this.onStatusChange();
     } catch (error) {
       this.lastPollAt = Date.now();
       this.lastPollError = error instanceof Error ? error.message : 'Calendar poll failed.';
+      this.onStatusChange();
     }
   }
 

@@ -13,6 +13,7 @@ export interface AuthStatus {
   connected: boolean;
   hasRefreshToken: boolean;
   expiresAt: number | null;
+  secureStorageAvailable: boolean;
 }
 
 export interface CalendarEventSummary {

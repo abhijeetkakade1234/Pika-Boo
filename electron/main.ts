@@ -6,7 +6,7 @@ import type { ReminderPayload } from '../src/shared/contracts';
 import type { AuthStatus, GoogleOAuthConfig, RuntimeStatus } from '../src/shared/contracts';
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
 import { CalendarPoller } from './services/poller';
-import { getGoogleOAuthConfig, saveGoogleOAuthConfig } from './services/settingsStore';
+import { getGoogleOAuthConfig, getGoogleOAuthConfigForUi, saveGoogleOAuthConfig } from './services/settingsStore';
 import { getStartupEnabled, setStartupEnabled } from './services/startup';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
@@ -16,11 +16,15 @@ let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let overlayHideTimer: NodeJS.Timeout | null = null;
-const poller = new CalendarPoller((payload) => {
-  showOverlay(payload);
-  refreshTrayMenu();
-  mainWindow?.webContents.send('runtime:updated');
-});
+const poller = new CalendarPoller(
+  (payload) => {
+    showOverlay(payload);
+  },
+  () => {
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+  },
+);
 
 function getRendererUrl(hash = ''): string {
   const devUrl = process.env.VITE_DEV_SERVER_URL;
@@ -200,6 +204,10 @@ function wireIpc(): void {
 
   ipcMain.handle('auth:get-status', (): AuthStatus => {
     return getAuthStatus(getGoogleOAuthConfig());
+  });
+
+  ipcMain.handle('auth:get-config', (): GoogleOAuthConfig => {
+    return getGoogleOAuthConfigForUi();
   });
 
   ipcMain.handle('auth:save-config', (_event, config: GoogleOAuthConfig): AuthStatus => {
