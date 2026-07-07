@@ -10,3 +10,4 @@
 - Added Calendar polling, reminder scheduling, and Windows startup wiring
 - Tightened token storage, config round-trip, and runtime status refresh
 - Fixed production renderer path and upgraded smoke verification to a real Electron launch
+- Added unpacked Windows packaging with packaged-exe smoke verification

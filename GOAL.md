@@ -21,6 +21,7 @@ Build a Windows desktop app that makes upcoming Google Calendar events hard to m
 - Google OAuth desktop-flow wiring
 - Calendar polling and duplicate reminder suppression wiring
 - Windows startup toggle wiring
+- Unpacked Windows packaging plus packaged smoke-launch verification
 
 ## Build Order
 

@@ -36,8 +36,11 @@ Read these before building:
 - `npm run dev`
 - `npm run build`
 - `npm run smoke`
+- `npm run package:dir`
+- `npm run package:smoke`
 
 `npm run smoke` now launches the built Electron app in a smoke-test mode and fails on renderer load errors.
+`npm run package:smoke` builds `release/win-unpacked` and smoke-launches the packaged exe.
 
 ## Current State
 
@@ -46,6 +49,7 @@ Read these before building:
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
 - Windows startup is only supported in a packaged app, not the dev shell
+- Unpacked Windows packaging is wired and smoke-verified
 - Live end-to-end verification still needs a real Google desktop OAuth client
 
 ## Google Setup
