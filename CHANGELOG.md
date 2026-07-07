@@ -17,3 +17,4 @@
 - Added import of Google desktop OAuth client JSON for faster end-to-end setup
 - Added meeting-link clickthrough directly from reminder artifacts
 - Added snooze and dismiss controls to reminder artifacts
+- Added pause/resume mode for reminders in tray and control panel

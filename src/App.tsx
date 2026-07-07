@@ -158,6 +158,20 @@ function ControlPanel() {
     }
   }
 
+  async function togglePaused() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.setPaused(!runtimeStatus?.paused);
+      setRuntimeStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to update pause mode.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function saveArtifact(nextArtifactId: ArtifactId) {
     setBusy(true);
     setError('');
@@ -307,10 +321,18 @@ function ControlPanel() {
             <button
               type="button"
               className="button-secondary"
-              disabled={busy}
+              disabled={busy || runtimeStatus?.paused}
               onClick={() => void pollNow()}
             >
               Poll calendar now
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={busy}
+              onClick={() => void togglePaused()}
+            >
+              {runtimeStatus?.paused ? 'Resume reminders' : 'Pause reminders'}
             </button>
             <button
               type="button"
@@ -325,6 +347,7 @@ function ControlPanel() {
             <li>Startup supported here: {runtimeStatus?.startupSupported ? 'yes' : 'packaged build only'}</li>
             <li>Startup enabled: {runtimeStatus?.startupEnabled ? 'yes' : 'no'}</li>
             <li>Poller running: {runtimeStatus?.pollerRunning ? 'yes' : 'no'}</li>
+            <li>Paused: {runtimeStatus?.paused ? 'yes' : 'no'}</li>
             <li>Upcoming events loaded: {runtimeStatus?.upcomingCount ?? 0}</li>
             <li>Active artifact: {runtimeStatus?.artifactId ?? artifactId}</li>
             <li>

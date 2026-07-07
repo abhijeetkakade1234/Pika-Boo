@@ -12,7 +12,7 @@ The app is mostly invisible until it needs to show a reminder.
 - Menu actions:
 - Open settings
 - Reconnect Google
-- Pause reminders
+- Pause or resume reminders
 - Quit
 
 ### Settings Window

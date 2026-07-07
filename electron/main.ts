@@ -197,11 +197,22 @@ function refreshTrayMenu(): void {
       },
       {
         label: 'Sync now',
+        enabled: !runtime.paused,
         click: () => {
           void poller.poll().finally(() => {
             refreshTrayMenu();
             mainWindow?.webContents.send('runtime:updated');
           });
+        },
+      },
+      {
+        label: 'Pause reminders',
+        type: 'checkbox',
+        checked: runtime.paused,
+        click: () => {
+          poller.setPaused(!runtime.paused);
+          refreshTrayMenu();
+          mainWindow?.webContents.send('runtime:updated');
         },
       },
       {
@@ -364,6 +375,16 @@ function wireIpc(): void {
 
   ipcMain.handle('runtime:poll-now', async (): Promise<RuntimeStatus> => {
     await poller.poll();
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return {
+      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+      startupSupported: isStartupSupported(),
+    };
+  });
+
+  ipcMain.handle('runtime:set-paused', (_event, paused: boolean): RuntimeStatus => {
+    poller.setPaused(paused);
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return {

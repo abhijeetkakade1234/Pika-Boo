@@ -37,6 +37,7 @@ export interface RuntimeStatus {
   startupEnabled: boolean;
   startupSupported: boolean;
   pollerRunning: boolean;
+  paused: boolean;
   lastPollAt: number | null;
   lastPollError: string | null;
   upcomingCount: number;

@@ -27,6 +27,7 @@ declare global {
       disconnectGoogle: () => Promise<AuthStatus>;
       getRuntimeStatus: () => Promise<RuntimeStatus>;
       setStartupEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
+      setPaused: (paused: boolean) => Promise<RuntimeStatus>;
       pollNow: () => Promise<RuntimeStatus>;
       onRuntimeUpdated: (callback: () => void) => () => void;
       onOverlayShow: (callback: (payload: ReminderPayload) => void) => () => void;

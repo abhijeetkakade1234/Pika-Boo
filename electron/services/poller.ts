@@ -33,6 +33,7 @@ export class CalendarPoller {
   private lastPollError: string | null = null;
   private upcomingCount = 0;
   private upcomingEvents: CalendarEventSummary[] = [];
+  private paused = false;
 
   constructor(
     private readonly onReminder: OverlayHandler,
@@ -44,6 +45,7 @@ export class CalendarPoller {
       startupEnabled,
       startupSupported,
       pollerRunning: this.timer !== null,
+      paused: this.paused,
       lastPollAt: this.lastPollAt,
       lastPollError: this.lastPollError,
       upcomingCount: this.upcomingCount,
@@ -72,7 +74,19 @@ export class CalendarPoller {
     this.timer = null;
   }
 
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+    this.onStatusChange();
+  }
+
   async poll(): Promise<void> {
+    if (this.paused) {
+      this.lastPollError = null;
+      this.lastPollAt = Date.now();
+      this.onStatusChange();
+      return;
+    }
+
     const config = getGoogleOAuthConfig();
     if (!config) {
       this.lastPollError = 'Google OAuth is not configured.';

@@ -49,6 +49,7 @@ Progress:
 - Google Calendar `events.list` fetch is wired for the primary calendar
 - Duplicate reminders are suppressed by event id plus start time
 - Runtime status now refreshes from background poll cycles
+- Pause mode is wired in tray plus control panel
 - Smoke verification now launches the built Electron app and catches renderer-load regressions
 - Control panel now shows the fetched upcoming events instead of only a count
 - Live event fetch still needs a connected Google account to verify end-to-end

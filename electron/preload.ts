@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('pikaBoo', {
   disconnectGoogle: () => ipcRenderer.invoke('auth:disconnect') as Promise<AuthStatus>,
   getRuntimeStatus: () => ipcRenderer.invoke('runtime:get-status') as Promise<RuntimeStatus>,
   setStartupEnabled: (enabled: boolean) => ipcRenderer.invoke('runtime:set-startup-enabled', enabled) as Promise<RuntimeStatus>,
+  setPaused: (paused: boolean) => ipcRenderer.invoke('runtime:set-paused', paused) as Promise<RuntimeStatus>,
   pollNow: () => ipcRenderer.invoke('runtime:poll-now') as Promise<RuntimeStatus>,
   onRuntimeUpdated: (callback: () => void) => {
     const listener = () => {

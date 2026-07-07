@@ -18,6 +18,7 @@ Acceptance:
 
 - Closing the settings window does not kill reminders.
 - Quit action is explicit from tray/menu.
+- Reminders can be paused without quitting the app.
 
 ## Calendar Polling
 
