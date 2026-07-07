@@ -1,12 +1,20 @@
-import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen, shell } from 'electron';
+import { app, BrowserWindow, Menu, Tray, dialog, ipcMain, nativeImage, screen, shell } from 'electron';
 import type { NativeImage } from 'electron';
 import path from 'node:path';
+import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { ArtifactId, ReminderPayload } from '../src/shared/contracts';
-import type { AuthStatus, GoogleOAuthConfig, RuntimeStatus } from '../src/shared/contracts';
+import type { AuthStatus, GoogleOAuthConfig, OAuthImportResult, RuntimeStatus } from '../src/shared/contracts';
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
 import { CalendarPoller } from './services/poller';
-import { getArtifactId, getGoogleOAuthConfig, getGoogleOAuthConfigForUi, saveArtifactId, saveGoogleOAuthConfig } from './services/settingsStore';
+import {
+  getArtifactId,
+  getGoogleOAuthConfig,
+  getGoogleOAuthConfigForUi,
+  parseGoogleOAuthDesktopClient,
+  saveArtifactId,
+  saveGoogleOAuthConfig,
+} from './services/settingsStore';
 import { getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
@@ -224,6 +232,33 @@ function wireIpc(): void {
   ipcMain.handle('auth:save-config', (_event, config: GoogleOAuthConfig): AuthStatus => {
     saveGoogleOAuthConfig(config);
     return getAuthStatus(getGoogleOAuthConfig());
+  });
+
+  ipcMain.handle('auth:import-config', async (): Promise<OAuthImportResult> => {
+    const result = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, {
+          properties: ['openFile'],
+          filters: [{ name: 'JSON files', extensions: ['json'] }],
+          title: 'Select Google OAuth desktop client JSON',
+        })
+      : await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: 'JSON files', extensions: ['json'] }],
+        title: 'Select Google OAuth desktop client JSON',
+      });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return { config: null, cancelled: true };
+    }
+
+    const raw = fs.readFileSync(result.filePaths[0], 'utf8');
+    const config = parseGoogleOAuthDesktopClient(raw);
+    saveGoogleOAuthConfig(config);
+
+    return {
+      config,
+      cancelled: false,
+    };
   });
 
   ipcMain.handle('artifact:get-selected', (): ArtifactId => {

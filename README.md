@@ -56,7 +56,7 @@ Read these before building:
 
 ## Google Setup
 
-Create a Google OAuth desktop client and use its client ID in the app before connecting Calendar.
+Create a Google OAuth desktop client and either import its JSON file in the app or paste the client ID manually before connecting Calendar.
 
 ## Repo Shape
 

@@ -50,6 +50,27 @@ export function getGoogleOAuthConfigForUi(): GoogleOAuthConfig {
   return getGoogleOAuthConfig() ?? { clientId: '', clientSecret: '' };
 }
 
+export function parseGoogleOAuthDesktopClient(rawText: string): GoogleOAuthConfig {
+  const parsed = JSON.parse(rawText) as {
+    installed?: {
+      client_id?: string;
+      client_secret?: string;
+    };
+  };
+
+  const clientId = parsed.installed?.client_id?.trim();
+  const clientSecret = parsed.installed?.client_secret?.trim();
+
+  if (!clientId) {
+    throw new Error('The selected file does not contain an installed Google OAuth client ID.');
+  }
+
+  return {
+    clientId,
+    clientSecret: clientSecret || undefined,
+  };
+}
+
 export function getArtifactId(): ArtifactId {
   return readSettings().artifactId ?? DEFAULT_ARTIFACT_ID;
 }

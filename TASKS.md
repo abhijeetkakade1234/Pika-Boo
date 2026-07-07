@@ -26,6 +26,7 @@ Progress:
 
 - Desktop OAuth flow is wired through the system browser
 - Client config is stored locally
+- Google desktop-client JSON import is wired
 - Token persistence is wired
 - Token refresh is wired
 - Saved OAuth config now round-trips back into the UI

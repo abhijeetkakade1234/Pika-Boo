@@ -79,6 +79,25 @@ function ControlPanel() {
     }
   }
 
+  async function importGoogleConfig() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const result = await window.pikaBoo.importGoogleOAuthConfig();
+      if (result.cancelled || !result.config) {
+        return;
+      }
+
+      setConfig(result.config);
+      setAuthStatus(await window.pikaBoo.getAuthStatus());
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to import Google OAuth config.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function connectGoogle() {
     setBusy(true);
     setError('');
@@ -245,6 +264,14 @@ function ControlPanel() {
           <div className="button-row">
             <button type="button" disabled={busy || !config.clientId.trim()} onClick={() => void saveConfig()}>
               Save config
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={busy}
+              onClick={() => void importGoogleConfig()}
+            >
+              Import Google JSON
             </button>
             <button
               type="button"

@@ -21,6 +21,7 @@ MVP settings can stay small:
 
 - Google account connection state
 - Artifact selector
+- Google desktop-client JSON import
 - Reminder lead time
 - Launch on startup toggle
 - Test reminder button

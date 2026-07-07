@@ -11,6 +11,11 @@ export interface GoogleOAuthConfig {
   clientSecret?: string;
 }
 
+export interface OAuthImportResult {
+  config: GoogleOAuthConfig | null;
+  cancelled: boolean;
+}
+
 export interface AuthStatus {
   configured: boolean;
   connected: boolean;
