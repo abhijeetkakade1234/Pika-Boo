@@ -12,3 +12,4 @@
 - Fixed production renderer path and upgraded smoke verification to a real Electron launch
 - Added unpacked Windows packaging with packaged-exe smoke verification
 - Added upcoming-event visibility in the control panel with external meeting-link open
+- Replaced the plain overlay banner with a persisted artifact system

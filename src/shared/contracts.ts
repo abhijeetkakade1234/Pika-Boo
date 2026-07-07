@@ -1,6 +1,9 @@
+export type ArtifactId = 'ghost' | 'rocket' | 'train' | 'ufo' | 'minimal';
+
 export interface ReminderPayload {
   title: string;
   subtitle: string;
+  artifactId: ArtifactId;
 }
 
 export interface GoogleOAuthConfig {
@@ -31,4 +34,5 @@ export interface RuntimeStatus {
   lastPollError: string | null;
   upcomingCount: number;
   upcomingEvents: CalendarEventSummary[];
+  artifactId: ArtifactId;
 }

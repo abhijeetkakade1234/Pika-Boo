@@ -1,10 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } from '../src/shared/contracts';
+import type { ArtifactId, AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } from '../src/shared/contracts';
 
 contextBridge.exposeInMainWorld('pikaBoo', {
   showOverlayDemo: () => ipcRenderer.invoke('app:show-overlay-demo'),
   openSettings: () => ipcRenderer.invoke('app:open-settings'),
   openExternal: (url: string) => ipcRenderer.invoke('app:open-external', url),
+  getSelectedArtifact: () => ipcRenderer.invoke('artifact:get-selected') as Promise<ArtifactId>,
+  setSelectedArtifact: (artifactId: ArtifactId) =>
+    ipcRenderer.invoke('artifact:set-selected', artifactId) as Promise<RuntimeStatus>,
   getAuthStatus: () => ipcRenderer.invoke('auth:get-status') as Promise<AuthStatus>,
   getGoogleOAuthConfig: () => ipcRenderer.invoke('auth:get-config') as Promise<GoogleOAuthConfig>,
   saveGoogleOAuthConfig: (config: GoogleOAuthConfig) => ipcRenderer.invoke('auth:save-config', config),

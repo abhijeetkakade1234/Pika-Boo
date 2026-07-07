@@ -1,9 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } from './shared/contracts';
+import { ArtifactOverlay, artifactRegistry } from './artifacts';
+import type {
+  ArtifactId,
+  AuthStatus,
+  GoogleOAuthConfig,
+  ReminderPayload,
+  RuntimeStatus,
+} from './shared/contracts';
 
 const defaultReminder: ReminderPayload = {
   title: 'Continue Breaking Ice redesign',
   subtitle: 'Focus block starts now',
+  artifactId: 'ghost',
 };
 
 function OverlayView() {
@@ -21,37 +29,30 @@ function OverlayView() {
     });
   }, []);
 
-  return (
-    <div className="overlay-shell">
-      <div className={`overlay-banner ${visible ? 'overlay-banner--visible' : ''}`}>
-        <div className="overlay-banner__icon">👀</div>
-        <div>
-          <div className="overlay-banner__title">{reminder.title}</div>
-          <div className="overlay-banner__subtitle">{reminder.subtitle}</div>
-        </div>
-      </div>
-    </div>
-  );
+  return <ArtifactOverlay reminder={reminder} visible={visible} />;
 }
 
 function ControlPanel() {
   const [config, setConfig] = useState<GoogleOAuthConfig>({ clientId: '', clientSecret: '' });
   const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
   const [runtimeStatus, setRuntimeStatus] = useState<RuntimeStatus | null>(null);
+  const [artifactId, setArtifactId] = useState<ArtifactId>('ghost');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     async function loadStatus() {
-      const [nextAuth, nextRuntime, nextConfig] = await Promise.all([
+      const [nextAuth, nextRuntime, nextConfig, nextArtifactId] = await Promise.all([
         window.pikaBoo.getAuthStatus(),
         window.pikaBoo.getRuntimeStatus(),
         window.pikaBoo.getGoogleOAuthConfig(),
+        window.pikaBoo.getSelectedArtifact(),
       ]);
 
       setAuthStatus(nextAuth);
       setRuntimeStatus(nextRuntime);
       setConfig(nextConfig);
+      setArtifactId(nextArtifactId);
     }
 
     loadStatus().catch((reason: unknown) => {
@@ -136,6 +137,21 @@ function ControlPanel() {
     }
   }
 
+  async function saveArtifact(nextArtifactId: ArtifactId) {
+    setBusy(true);
+    setError('');
+
+    try {
+      setArtifactId(nextArtifactId);
+      const status = await window.pikaBoo.setSelectedArtifact(nextArtifactId);
+      setRuntimeStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to save artifact.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function renderUpcomingEvents() {
     if (!runtimeStatus?.upcomingEvents.length) {
       return <p className="empty-text">No upcoming events loaded yet.</p>;
@@ -153,7 +169,7 @@ function ControlPanel() {
               <button
                 type="button"
                 className="button-secondary"
-                onClick={() => void window.pikaBoo.openExternal(event.meetingUrl!)}
+                onClick={() => void window.pikaBoo.openExternal(event.meetingUrl)}
               >
                 Open link
               </button>
@@ -170,8 +186,8 @@ function ControlPanel() {
         <p className="eyebrow">Ambient desktop reminders</p>
         <h1>Pika-Boo</h1>
         <p className="lede">
-          Google Calendar reminders later. Right now the scaffold proves the tray flow and moving
-          top-banner overlay.
+          Artifacts now carry the reminder across the screen. Pick one, then trigger the demo or a
+          real calendar poll.
         </p>
         <div className="cta-row">
           <button type="button" onClick={() => void window.pikaBoo.showOverlayDemo()}>
@@ -181,6 +197,29 @@ function ControlPanel() {
       </section>
 
       <section className="status-grid">
+        <article className="status-card">
+          <h2>Artifact</h2>
+          <label className="field">
+            <span>Active artifact</span>
+            <select
+              value={artifactId}
+              onChange={(event) => void saveArtifact(event.target.value as ArtifactId)}
+              disabled={busy}
+              className="field-select"
+            >
+              {artifactRegistry.map((artifact) => (
+                <option key={artifact.id} value={artifact.id}>
+                  {artifact.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <ul>
+            <li>Selected artifact: {artifactRegistry.find((artifact) => artifact.id === artifactId)?.label}</li>
+            <li>Artifacts carry the reminder body instead of a plain banner</li>
+          </ul>
+        </article>
+
         <article className="status-card">
           <h2>Google OAuth</h2>
           <label className="field">
@@ -232,14 +271,7 @@ function ControlPanel() {
           </ul>
           {error ? <p className="error-text">{error}</p> : null}
         </article>
-        <article className="status-card">
-          <h2>Scaffold status</h2>
-          <ul>
-            <li>Electron main process wired</li>
-            <li>Tray menu wired</li>
-            <li>Transparent overlay window wired</li>
-          </ul>
-        </article>
+
         <article className="status-card">
           <h2>Runtime</h2>
           <div className="button-row">
@@ -265,6 +297,7 @@ function ControlPanel() {
             <li>Startup enabled: {runtimeStatus?.startupEnabled ? 'yes' : 'no'}</li>
             <li>Poller running: {runtimeStatus?.pollerRunning ? 'yes' : 'no'}</li>
             <li>Upcoming events loaded: {runtimeStatus?.upcomingCount ?? 0}</li>
+            <li>Active artifact: {runtimeStatus?.artifactId ?? artifactId}</li>
             <li>
               Last poll:{' '}
               {runtimeStatus?.lastPollAt ? new Date(runtimeStatus.lastPollAt).toLocaleTimeString() : 'never'}
@@ -272,6 +305,7 @@ function ControlPanel() {
             <li>Last poll error: {runtimeStatus?.lastPollError ?? 'none'}</li>
           </ul>
         </article>
+
         <article className="status-card status-card--wide">
           <h2>Upcoming events</h2>
           {renderUpcomingEvents()}

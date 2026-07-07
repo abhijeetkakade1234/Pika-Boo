@@ -62,6 +62,11 @@ Acceptance:
 - Animation is readable
 - Banner hides after 8 seconds
 
+Progress:
+
+- Overlay now uses an artifact system instead of a plain banner
+- Selected artifact is persisted and used by demo plus real reminders
+
 ### Task 5: Windows Startup
 
 Status: active
@@ -91,6 +96,7 @@ Progress:
 ## Backlog
 
 - Snooze
+- More artifacts
 - Theme variants
 - Multi-account
 - Outlook support

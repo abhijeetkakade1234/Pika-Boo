@@ -2,11 +2,11 @@ import { app, BrowserWindow, Menu, Tray, ipcMain, nativeImage, screen, shell } f
 import type { NativeImage } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { ReminderPayload } from '../src/shared/contracts';
+import type { ArtifactId, ReminderPayload } from '../src/shared/contracts';
 import type { AuthStatus, GoogleOAuthConfig, RuntimeStatus } from '../src/shared/contracts';
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
 import { CalendarPoller } from './services/poller';
-import { getGoogleOAuthConfig, getGoogleOAuthConfigForUi, saveGoogleOAuthConfig } from './services/settingsStore';
+import { getArtifactId, getGoogleOAuthConfig, getGoogleOAuthConfigForUi, saveArtifactId, saveGoogleOAuthConfig } from './services/settingsStore';
 import { getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
@@ -143,6 +143,7 @@ function refreshTrayMenu(): void {
           showOverlay({
             title: 'Continue building Pika-Boo',
             subtitle: 'Scaffold is live. Overlay is moving.',
+            artifactId: getArtifactId(),
           });
         },
       },
@@ -195,6 +196,7 @@ function wireIpc(): void {
     showOverlay({
       title: 'Meeting with Albert',
       subtitle: 'Starts in 5 minutes',
+      artifactId: getArtifactId(),
     });
   });
 
@@ -222,6 +224,20 @@ function wireIpc(): void {
   ipcMain.handle('auth:save-config', (_event, config: GoogleOAuthConfig): AuthStatus => {
     saveGoogleOAuthConfig(config);
     return getAuthStatus(getGoogleOAuthConfig());
+  });
+
+  ipcMain.handle('artifact:get-selected', (): ArtifactId => {
+    return getArtifactId();
+  });
+
+  ipcMain.handle('artifact:set-selected', (_event, artifactId: ArtifactId): RuntimeStatus => {
+    saveArtifactId(artifactId);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return {
+      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+      startupSupported: isStartupSupported(),
+    };
   });
 
   ipcMain.handle('auth:connect', async (): Promise<AuthStatus> => {
@@ -287,6 +303,7 @@ async function bootstrap(): Promise<void> {
     showOverlay({
       title: 'Smoke test',
       subtitle: 'Windows created successfully',
+      artifactId: getArtifactId(),
     });
     setTimeout(() => {
       tray?.destroy();

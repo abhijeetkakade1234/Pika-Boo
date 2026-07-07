@@ -13,9 +13,10 @@ Electron Main Process
     +-- Auth Service
     +-- Calendar Poller
     +-- Reminder Scheduler
+    +-- Artifact Settings
     `-- Overlay Window
             |
-            `-- Renderer UI
+            `-- Artifact Renderer
 ```
 
 ## Module Responsibilities
@@ -44,13 +45,17 @@ Fetches upcoming events on a fixed interval.
 
 Turns calendar events into reminder decisions and suppresses duplicates.
 
+### Artifact Settings
+
+Persists the currently selected artifact and attaches it to reminder payloads.
+
 ### Overlay Window
 
-Small always-on-top transparent window pinned to the top of the screen for the moving reminder UI.
+Small always-on-top transparent window pinned to the top of the screen for the moving artifact UI.
 
-### Renderer UI
+### Artifact Renderer
 
-Draws the banner and animation. Keep this thin; business logic stays in main-side services.
+Draws the chosen artifact carrying the reminder. Keep this thin; business logic stays in main-side services.
 
 ## Data Flow
 

@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } from './shared/contracts';
+import type { ArtifactId, AuthStatus, GoogleOAuthConfig, ReminderPayload, RuntimeStatus } from './shared/contracts';
 
 declare global {
   interface Window {
@@ -8,6 +8,8 @@ declare global {
       showOverlayDemo: () => Promise<void>;
       openSettings: () => Promise<void>;
       openExternal: (url: string) => Promise<void>;
+      getSelectedArtifact: () => Promise<ArtifactId>;
+      setSelectedArtifact: (artifactId: ArtifactId) => Promise<RuntimeStatus>;
       getAuthStatus: () => Promise<AuthStatus>;
       getGoogleOAuthConfig: () => Promise<GoogleOAuthConfig>;
       saveGoogleOAuthConfig: (config: GoogleOAuthConfig) => Promise<AuthStatus>;

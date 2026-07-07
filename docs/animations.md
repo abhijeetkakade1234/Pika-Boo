@@ -2,8 +2,8 @@
 
 ## MVP Animation
 
-- Banner enters from just outside one side of the screen
-- Banner travels across the top edge
+- Artifact enters from just outside one side of the screen
+- Artifact carries a reminder card across the top edge
 - Motion should be smooth and easy to notice
 - Total visibility target is about 8 seconds
 - No bounce
@@ -15,11 +15,19 @@
 - Motion is the product gimmick, so keep it obvious
 - Text must stay readable while moving
 - Animation must not tank idle performance
+- Artifact can have personality without becoming a mini game
+
+## Built-in Artifacts
+
+- Ghost
+- Rocket
+- Train
+- UFO
+- Minimal
 
 ## Deferred Ideas
 
 - Santa
-- Paper airplane
-- Rocket
 - Cat run
-- Tiny train
+- Dragon
+- Holiday packs

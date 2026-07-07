@@ -28,7 +28,7 @@ MVP settings can stay small:
 
 - Positioned at the top edge of the screen
 - Transparent window background
-- Banner moves horizontally across the screen
+- Artifact moves horizontally across the screen carrying the message
 - Always on top
 - Visible long enough to be noticed
 - Minimal text, large enough to scan quickly
@@ -38,7 +38,8 @@ MVP settings can stay small:
 Default format:
 
 ```text
-[icon] Event title
+[artifact] carries the message card
+Event title
 Starts in X minutes
 ```
 
@@ -54,6 +55,7 @@ Fallback if timing text is not useful:
 - Motion is the main attention signal
 - No giant modal feel
 - No noisy notification-center styling
+- Artifact choice is part of the product identity
 
 ## Interaction Rules
 

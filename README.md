@@ -10,7 +10,7 @@ Instead of standard notifications, it shows a moving banner across the top of th
 - Google Calendar read access
 - Runs on Windows startup
 - Background polling every 60 seconds
-- Animated top banner reminder
+- Animated artifact reminder across the top of the screen
 - Auto hide after 8 seconds
 
 ## Docs First
@@ -46,6 +46,7 @@ Read these before building:
 
 - Desktop shell is built
 - Overlay reminder is wired
+- Artifact-based overlay system is wired
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
 - Windows startup is only supported in a packaged app, not the dev shell

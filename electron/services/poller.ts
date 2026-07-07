@@ -1,6 +1,6 @@
 import type { CalendarEventSummary, ReminderPayload, RuntimeStatus } from '../../src/shared/contracts';
 import { listUpcomingEvents } from './googleAuth';
-import { getGoogleOAuthConfig } from './settingsStore';
+import { getArtifactId, getGoogleOAuthConfig } from './settingsStore';
 
 const POLL_INTERVAL_MS = 60_000;
 const REMINDER_LEAD_MS = 5 * 60_000;
@@ -20,6 +20,7 @@ function buildReminder(event: CalendarEventSummary): ReminderPayload {
   return {
     title: event.summary,
     subtitle: deltaMinutes <= 0 ? 'Starting now' : `Starts in ${deltaMinutes} minute${deltaMinutes === 1 ? '' : 's'}`,
+    artifactId: getArtifactId(),
   };
 }
 
@@ -45,6 +46,7 @@ export class CalendarPoller {
       lastPollError: this.lastPollError,
       upcomingCount: this.upcomingCount,
       upcomingEvents: this.upcomingEvents,
+      artifactId: getArtifactId(),
     };
   }
 
