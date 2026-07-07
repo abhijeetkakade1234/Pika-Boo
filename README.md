@@ -50,6 +50,7 @@ Read these before building:
 - Built-in artifact selector is wired
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
+- Reminder artifacts can open meeting links directly
 - Windows startup is only supported in a packaged app, not the dev shell
 - Unpacked Windows packaging is wired and smoke-verified
 - Live end-to-end verification still needs a real Google desktop OAuth client

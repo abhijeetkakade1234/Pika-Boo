@@ -38,6 +38,7 @@ Acceptance:
 - Overlay is always on top.
 - Reminder content is readable.
 - Reminder hides itself after the animation window ends.
+- Reminder can open a meeting link when the event has one.
 
 ## Startup Launch
 
