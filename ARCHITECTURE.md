@@ -80,5 +80,5 @@ Startup
 ## Deferred Complexity
 
 - No local database in MVP unless token/event caching actually needs it.
-- No plugin animation system in MVP.
+- No plugin animation system in MVP; built-in artifacts live as renderer definitions.
 - No event write-back path in MVP.

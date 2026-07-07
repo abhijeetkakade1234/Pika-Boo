@@ -20,6 +20,7 @@ The app is mostly invisible until it needs to show a reminder.
 MVP settings can stay small:
 
 - Google account connection state
+- Artifact selector
 - Reminder lead time
 - Launch on startup toggle
 - Test reminder button

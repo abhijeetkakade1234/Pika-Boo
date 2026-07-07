@@ -47,6 +47,7 @@ Read these before building:
 - Desktop shell is built
 - Overlay reminder is wired
 - Artifact-based overlay system is wired
+- Built-in artifact selector is wired
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
 - Windows startup is only supported in a packaged app, not the dev shell
