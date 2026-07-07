@@ -25,6 +25,7 @@ export interface CalendarEventSummary {
 
 export interface RuntimeStatus {
   startupEnabled: boolean;
+  startupSupported: boolean;
   pollerRunning: boolean;
   lastPollAt: number | null;
   lastPollError: string | null;

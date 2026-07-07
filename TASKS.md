@@ -48,6 +48,7 @@ Progress:
 - Google Calendar `events.list` fetch is wired for the primary calendar
 - Duplicate reminders are suppressed by event id plus start time
 - Runtime status now refreshes from background poll cycles
+- Smoke verification now launches the built Electron app and catches renderer-load regressions
 - Live event fetch still needs a connected Google account to verify end-to-end
 
 ### Task 4: Reminder Overlay
@@ -73,6 +74,7 @@ Progress:
 
 - Windows login startup toggle is wired through Electron login item settings
 - Tray and control-panel controls are wired
+- Dev-shell startup is intentionally blocked because only packaged builds can reboot correctly
 - Installer-level verification is still pending
 
 ## Verification Notes
@@ -81,6 +83,7 @@ Progress:
 - `npm run smoke` passes
 - Tray menu and overlay demo path are wired in the Electron shell
 - Poll-now control and startup toggle are wired in the Electron shell
+- Smoke now includes a real built-Electron launch check
 
 ## Backlog
 

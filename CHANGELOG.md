@@ -9,3 +9,4 @@
 - Added Google OAuth desktop-flow wiring and local token/config storage
 - Added Calendar polling, reminder scheduling, and Windows startup wiring
 - Tightened token storage, config round-trip, and runtime status refresh
+- Fixed production renderer path and upgraded smoke verification to a real Electron launch

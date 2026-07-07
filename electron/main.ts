@@ -7,7 +7,7 @@ import type { AuthStatus, GoogleOAuthConfig, RuntimeStatus } from '../src/shared
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
 import { CalendarPoller } from './services/poller';
 import { getGoogleOAuthConfig, getGoogleOAuthConfigForUi, saveGoogleOAuthConfig } from './services/settingsStore';
-import { getStartupEnabled, setStartupEnabled } from './services/startup';
+import { getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BOO_SMOKE_TEST === '1';
@@ -33,7 +33,7 @@ function getRendererUrl(hash = ''): string {
     return `${devUrl}/${hash}`;
   }
 
-  const fileUrl = pathToFileURL(path.join(__dirname, '..', 'dist', 'index.html')).toString();
+  const fileUrl = pathToFileURL(path.join(__dirname, '..', '..', 'dist', 'index.html')).toString();
   return hash ? `${fileUrl}${hash}` : fileUrl;
 }
 
@@ -127,7 +127,7 @@ function refreshTrayMenu(): void {
     return;
   }
 
-  const runtime = poller.getStatus(getStartupEnabled());
+  const runtime = poller.getStatus(getStartupEnabled(), isStartupSupported());
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
@@ -159,6 +159,7 @@ function refreshTrayMenu(): void {
         label: 'Launch on Windows login',
         type: 'checkbox',
         checked: runtime.startupEnabled,
+        enabled: runtime.startupSupported,
         click: () => {
           setStartupEnabled(!runtime.startupEnabled);
           refreshTrayMenu();
@@ -237,21 +238,30 @@ function wireIpc(): void {
   });
 
   ipcMain.handle('runtime:get-status', (): RuntimeStatus => {
-    return poller.getStatus(getStartupEnabled());
+    return {
+      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+      startupSupported: isStartupSupported(),
+    };
   });
 
   ipcMain.handle('runtime:set-startup-enabled', (_event, enabled: boolean): RuntimeStatus => {
     setStartupEnabled(enabled);
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
-    return poller.getStatus(getStartupEnabled());
+    return {
+      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+      startupSupported: isStartupSupported(),
+    };
   });
 
   ipcMain.handle('runtime:poll-now', async (): Promise<RuntimeStatus> => {
     await poller.poll();
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
-    return poller.getStatus(getStartupEnabled());
+    return {
+      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+      startupSupported: isStartupSupported(),
+    };
   });
 }
 

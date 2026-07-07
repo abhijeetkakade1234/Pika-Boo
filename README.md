@@ -37,12 +37,15 @@ Read these before building:
 - `npm run build`
 - `npm run smoke`
 
+`npm run smoke` now launches the built Electron app in a smoke-test mode and fails on renderer load errors.
+
 ## Current State
 
 - Desktop shell is built
 - Overlay reminder is wired
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
+- Windows startup is only supported in a packaged app, not the dev shell
 - Live end-to-end verification still needs a real Google desktop OAuth client
 
 ## Google Setup

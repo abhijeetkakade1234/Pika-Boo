@@ -226,13 +226,14 @@ function ControlPanel() {
             <button
               type="button"
               className="button-secondary"
-              disabled={busy}
+              disabled={busy || !runtimeStatus?.startupSupported}
               onClick={() => void toggleStartup()}
             >
               {runtimeStatus?.startupEnabled ? 'Disable startup' : 'Enable startup'}
             </button>
           </div>
           <ul>
+            <li>Startup supported here: {runtimeStatus?.startupSupported ? 'yes' : 'packaged build only'}</li>
             <li>Startup enabled: {runtimeStatus?.startupEnabled ? 'yes' : 'no'}</li>
             <li>Poller running: {runtimeStatus?.pollerRunning ? 'yes' : 'no'}</li>
             <li>Upcoming events loaded: {runtimeStatus?.upcomingCount ?? 0}</li>

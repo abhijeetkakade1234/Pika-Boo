@@ -35,9 +35,10 @@ export class CalendarPoller {
     private readonly onStatusChange: () => void,
   ) {}
 
-  getStatus(startupEnabled: boolean): RuntimeStatus {
+  getStatus(startupEnabled: boolean, startupSupported: boolean): RuntimeStatus {
     return {
       startupEnabled,
+      startupSupported,
       pollerRunning: this.timer !== null,
       lastPollAt: this.lastPollAt,
       lastPollError: this.lastPollError,
