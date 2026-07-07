@@ -23,3 +23,4 @@
 - Added cat, paper-plane, and santa built-in reminder artifacts
 - Added inline artifact previews to the control panel
 - Added NSIS installer build and installer-artifact smoke verification
+- Added an in-app proof-gap list for remaining Google and installer verification work

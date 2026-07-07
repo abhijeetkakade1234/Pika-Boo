@@ -231,6 +231,27 @@ function ControlPanel() {
     );
   }
 
+  function renderBlockers() {
+    const blockers = [
+      authStatus?.configured ? null : 'Google desktop OAuth client still needs to be configured.',
+      authStatus?.connected ? null : 'Live Google sign-in still needs to be completed and verified.',
+      runtimeStatus?.upcomingCount ? null : 'Live calendar fetch still needs verification against a real connected account.',
+      'Installed-run Windows startup still needs verification after a real installer install.',
+    ].filter(Boolean) as string[];
+
+    if (blockers.length === 0) {
+      return <p className="empty-text">No local blocker is visible here. Final proof still depends on real Google and installed-run checks.</p>;
+    }
+
+    return (
+      <ul>
+        {blockers.map((blocker) => (
+          <li key={blocker}>{blocker}</li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
     <main className="app-shell">
       <section className="hero-card">
@@ -417,6 +438,11 @@ function ControlPanel() {
         <article className="status-card status-card--wide">
           <h2>Upcoming events</h2>
           {renderUpcomingEvents()}
+        </article>
+
+        <article className="status-card status-card--wide">
+          <h2>Remaining proof gaps</h2>
+          {renderBlockers()}
         </article>
       </section>
     </main>

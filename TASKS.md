@@ -74,6 +74,7 @@ Progress:
 - Control panel now shows inline artifact previews for faster selection
 - Reminder artifacts can open meeting links directly when the event has one
 - Overlay now supports snooze and dismiss controls
+- Control panel now surfaces the remaining live-verification proof gaps
 
 ### Task 5: Windows Startup
 
