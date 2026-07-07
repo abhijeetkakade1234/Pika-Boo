@@ -3,6 +3,9 @@ import type { NativeImage } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { ReminderPayload } from '../src/shared/contracts';
+import type { AuthStatus, GoogleOAuthConfig } from '../src/shared/contracts';
+import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
+import { getGoogleOAuthConfig, saveGoogleOAuthConfig } from './services/settingsStore';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BOO_SMOKE_TEST === '1';
@@ -158,6 +161,31 @@ function wireIpc(): void {
   ipcMain.handle('app:open-settings', () => {
     mainWindow?.show();
     mainWindow?.focus();
+  });
+
+  ipcMain.handle('auth:get-status', (): AuthStatus => {
+    return getAuthStatus(getGoogleOAuthConfig());
+  });
+
+  ipcMain.handle('auth:save-config', (_event, config: GoogleOAuthConfig): AuthStatus => {
+    saveGoogleOAuthConfig(config);
+    return getAuthStatus(getGoogleOAuthConfig());
+  });
+
+  ipcMain.handle('auth:connect', async (): Promise<AuthStatus> => {
+    const config = getGoogleOAuthConfig();
+
+    if (!config) {
+      throw new Error('Save a Google OAuth client ID first.');
+    }
+
+    return beginGoogleOAuth(config);
+  });
+
+  ipcMain.handle('auth:disconnect', (): AuthStatus => {
+    const config = getGoogleOAuthConfig();
+    clearGoogleTokens();
+    return getAuthStatus(config);
   });
 }
 

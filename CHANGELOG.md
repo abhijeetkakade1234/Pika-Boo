@@ -6,3 +6,4 @@
 - Defined MVP scope, architecture, and first task queue
 - Added Electron + React + TypeScript scaffold
 - Added tray menu and transparent overlay demo shell
+- Added Google OAuth desktop-flow wiring and local token/config storage

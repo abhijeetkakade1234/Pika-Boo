@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ReminderPayload } from './shared/contracts';
+import type { AuthStatus, GoogleOAuthConfig, ReminderPayload } from './shared/contracts';
 
 const defaultReminder: ReminderPayload = {
   title: 'Continue Breaking Ice redesign',
@@ -35,6 +35,64 @@ function OverlayView() {
 }
 
 function ControlPanel() {
+  const [config, setConfig] = useState<GoogleOAuthConfig>({ clientId: '', clientSecret: '' });
+  const [authStatus, setAuthStatus] = useState<AuthStatus | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    window.pikaBoo
+      .getAuthStatus()
+      .then((status) => {
+        setAuthStatus(status);
+      })
+      .catch((reason: unknown) => {
+        setError(reason instanceof Error ? reason.message : 'Failed to load auth status.');
+      });
+  }, []);
+
+  async function saveConfig() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.saveGoogleOAuthConfig(config);
+      setAuthStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Failed to save config.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function connectGoogle() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.connectGoogle();
+      setAuthStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Google sign-in failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function disconnectGoogle() {
+    setBusy(true);
+    setError('');
+
+    try {
+      const status = await window.pikaBoo.disconnectGoogle();
+      setAuthStatus(status);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Disconnect failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="hero-card">
@@ -53,6 +111,56 @@ function ControlPanel() {
 
       <section className="status-grid">
         <article className="status-card">
+          <h2>Google OAuth</h2>
+          <label className="field">
+            <span>Client ID</span>
+            <input
+              type="text"
+              value={config.clientId}
+              onChange={(event) => setConfig((current) => ({ ...current, clientId: event.target.value }))}
+              placeholder="Google desktop app client ID"
+            />
+          </label>
+          <label className="field">
+            <span>Client secret (optional)</span>
+            <input
+              type="text"
+              value={config.clientSecret ?? ''}
+              onChange={(event) =>
+                setConfig((current) => ({ ...current, clientSecret: event.target.value }))
+              }
+              placeholder="Optional"
+            />
+          </label>
+          <div className="button-row">
+            <button type="button" disabled={busy || !config.clientId.trim()} onClick={() => void saveConfig()}>
+              Save config
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={busy || !authStatus?.configured}
+              onClick={() => void connectGoogle()}
+            >
+              Connect Google
+            </button>
+            <button
+              type="button"
+              className="button-secondary"
+              disabled={busy || !authStatus?.connected}
+              onClick={() => void disconnectGoogle()}
+            >
+              Disconnect
+            </button>
+          </div>
+          <ul>
+            <li>Configured: {authStatus?.configured ? 'yes' : 'no'}</li>
+            <li>Connected: {authStatus?.connected ? 'yes' : 'no'}</li>
+            <li>Refresh token saved: {authStatus?.hasRefreshToken ? 'yes' : 'no'}</li>
+          </ul>
+          {error ? <p className="error-text">{error}</p> : null}
+        </article>
+        <article className="status-card">
           <h2>Scaffold status</h2>
           <ul>
             <li>Electron main process wired</li>
@@ -63,9 +171,9 @@ function ControlPanel() {
         <article className="status-card">
           <h2>Next build slice</h2>
           <ul>
-            <li>Google OAuth</li>
             <li>Calendar polling</li>
             <li>Real reminder scheduling</li>
+            <li>Windows startup</li>
           </ul>
         </article>
       </section>

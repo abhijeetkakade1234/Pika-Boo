@@ -37,6 +37,11 @@ button:hover {
   filter: brightness(1.05);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .app-shell {
   padding: 32px;
 }
@@ -99,6 +104,45 @@ button:hover {
 .status-card ul {
   padding-left: 18px;
   color: #cbd5e1;
+}
+
+.field {
+  display: block;
+  margin-bottom: 14px;
+}
+
+.field span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.field input {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 14px;
+  padding: 0.8rem 0.95rem;
+  font: inherit;
+  color: #f8fafc;
+  background: rgba(15, 23, 42, 0.88);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.button-secondary {
+  color: #e2e8f0;
+  background: rgba(56, 189, 248, 0.16);
+}
+
+.error-text {
+  margin-bottom: 0;
+  color: #fda4af;
 }
 
 .overlay-shell {

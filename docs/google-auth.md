@@ -7,10 +7,12 @@ Allow the app to read calendar events from the user's Google account with the mi
 ## Scope Direction
 
 - Prefer read-only calendar access
+- Scope: `https://www.googleapis.com/auth/calendar.readonly`
 
 ## Flow Direction
 
-- Desktop OAuth flow
+- Desktop OAuth flow with the system browser
+- Loopback callback on `127.0.0.1`
 - Persist refreshable auth state locally
 - Recover on relaunch without forcing login every time
 

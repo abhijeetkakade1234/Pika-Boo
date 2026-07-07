@@ -22,6 +22,13 @@ Acceptance:
 - Calendar read-only scope is granted
 - Token can be restored on relaunch
 
+Progress:
+
+- Desktop OAuth flow is wired through the system browser
+- Client config is stored locally
+- Token persistence is wired
+- Live sign-in still needs a real Google desktop client ID to verify end-to-end
+
 ### Task 3: Calendar Poller
 
 Status: pending

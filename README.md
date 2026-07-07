@@ -37,6 +37,10 @@ Read these before building:
 - `npm run build`
 - `npm run smoke`
 
+## Google Setup
+
+Create a Google OAuth desktop client and use its client ID in the app before connecting Calendar.
+
 ## Repo Shape
 
 ```text
