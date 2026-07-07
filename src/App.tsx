@@ -265,6 +265,27 @@ function ControlPanel() {
               ))}
             </select>
           </label>
+          <div className="artifact-picker" role="list" aria-label="Artifact previews">
+            {artifactRegistry.map((artifact) => {
+              const selected = artifact.id === artifactId;
+
+              return (
+                <button
+                  key={artifact.id}
+                  type="button"
+                  className={`artifact-picker__card ${selected ? 'artifact-picker__card--selected' : ''}`}
+                  onClick={() => void saveArtifact(artifact.id)}
+                  disabled={busy}
+                >
+                  <div className="artifact-picker__label">{artifact.label}</div>
+                  <div className="artifact-picker__preview">
+                    <span>{artifact.lead}</span>
+                    <span>{artifact.trail}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
           <ul>
             <li>Selected artifact: {artifactRegistry.find((artifact) => artifact.id === artifactId)?.label}</li>
             <li>Artifacts carry the reminder body instead of a plain banner</li>

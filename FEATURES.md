@@ -40,6 +40,7 @@ Acceptance:
 - Reminder content is readable.
 - Reminder hides itself after the animation window ends.
 - User can switch between built-in artifact styles.
+- User can preview built-in artifact styles from the control panel.
 - Reminder can open a meeting link when the event has one.
 - Reminder can be snoozed or dismissed locally.
 

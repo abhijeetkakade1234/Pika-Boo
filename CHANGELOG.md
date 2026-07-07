@@ -21,3 +21,4 @@
 - Added configurable reminder lead time to the control panel and poller runtime
 - Added tray-side reminder lead-time controls for background-only use
 - Added cat, paper-plane, and santa built-in reminder artifacts
+- Added inline artifact previews to the control panel

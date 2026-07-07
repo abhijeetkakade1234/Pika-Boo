@@ -71,6 +71,7 @@ Progress:
 - Selected artifact is persisted and used by demo plus real reminders
 - Artifact definitions are split into renderer-side files instead of one inline overlay block
 - Built-in artifact set now includes cat, paper plane, and santa variants
+- Control panel now shows inline artifact previews for faster selection
 - Reminder artifacts can open meeting links directly when the event has one
 - Overlay now supports snooze and dismiss controls
 
