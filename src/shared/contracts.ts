@@ -1,4 +1,4 @@
-export type ArtifactId = 'ghost' | 'rocket' | 'train' | 'ufo' | 'minimal';
+export type ArtifactId = 'ghost' | 'rocket' | 'train' | 'ufo' | 'minimal' | 'cat' | 'paper-plane' | 'santa';
 
 export interface ReminderPayload {
   reminderId: string;

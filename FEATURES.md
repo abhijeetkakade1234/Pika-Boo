@@ -39,6 +39,7 @@ Acceptance:
 - Overlay is always on top.
 - Reminder content is readable.
 - Reminder hides itself after the animation window ends.
+- User can switch between built-in artifact styles.
 - Reminder can open a meeting link when the event has one.
 - Reminder can be snoozed or dismissed locally.
 

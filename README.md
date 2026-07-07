@@ -47,7 +47,7 @@ Read these before building:
 - Desktop shell is built
 - Overlay reminder is wired
 - Artifact-based overlay system is wired
-- Built-in artifact selector is wired
+- Built-in artifact selector is wired with ghost, rocket, train, UFO, cat, paper plane, santa, and minimal variants
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
 - Reminder lead time is configurable from the control panel

@@ -288,6 +288,18 @@ button:disabled {
   color: #67e8f9;
 }
 
+.artifact--cat .artifact-run__track {
+  color: #f9a8d4;
+}
+
+.artifact--paper-plane .artifact-run__track {
+  color: #bfdbfe;
+}
+
+.artifact--santa .artifact-run__track {
+  color: #fca5a5;
+}
+
 .artifact--minimal .artifact-run__track {
   color: #cbd5e1;
 }

@@ -20,20 +20,29 @@ Build a Windows desktop app that makes upcoming Google Calendar events hard to m
 - Local reminder demo path
 - Google OAuth desktop-flow wiring
 - Calendar polling and duplicate reminder suppression wiring
+- Configurable reminder lead time in control panel and tray
+- Built-in artifact selector with ghost, rocket, train, UFO, cat, paper plane, santa, and minimal variants
+- Reminder actions for meeting-link open, snooze, and dismiss
 - Windows startup toggle wiring
 - Unpacked Windows packaging plus packaged smoke-launch verification
+
+## What still blocks true MVP done
+
+- Live Google OAuth sign-in still needs a real desktop client to verify end to end
+- Live calendar fetch still needs a connected Google account to verify against real events
+- Installer-level Windows startup still needs verification outside the smoke package path
 
 ## Build Order
 
 1. Scaffold shell
-2. Google OAuth
-3. Calendar polling
-4. Reminder scheduling
-5. Windows startup
+2. Reminder shell and artifact experience
+3. Google OAuth
+4. Calendar polling on live data
+5. Windows startup verification
 
 ## Not in MVP
 
 - Editing calendar events
-- Outlook support
 - Fancy theme packs
+- Outlook support
 - AI summaries

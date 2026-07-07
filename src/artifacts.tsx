@@ -13,6 +13,15 @@ export const artifactRegistry: ArtifactDefinition[] = [
   { id: 'rocket', label: 'Rocket', lead: 'Rocket', trail: '========>', className: 'artifact--rocket' },
   { id: 'train', label: 'Train', lead: 'Train', trail: '[] [] [] >', className: 'artifact--train' },
   { id: 'ufo', label: 'UFO', lead: 'UFO', trail: '~~~~~~~~~>', className: 'artifact--ufo' },
+  { id: 'cat', label: 'Cat', lead: 'Cat', trail: '...zoom...', className: 'artifact--cat' },
+  {
+    id: 'paper-plane',
+    label: 'Paper Plane',
+    lead: 'Plane',
+    trail: '---------->',
+    className: 'artifact--paper-plane',
+  },
+  { id: 'santa', label: 'Santa', lead: 'Santa', trail: '***gift***>', className: 'artifact--santa' },
   { id: 'minimal', label: 'Minimal', lead: 'Mark', trail: '-------->', className: 'artifact--minimal' },
 ];
 
