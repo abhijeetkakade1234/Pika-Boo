@@ -82,7 +82,7 @@ function createOverlayWindow(): BrowserWindow {
     x: 0,
     y: 0,
     width,
-    height: 96,
+    height: 156,
     frame: false,
     transparent: true,
     resizable: false,

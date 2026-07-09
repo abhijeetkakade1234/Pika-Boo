@@ -28,6 +28,7 @@ Read these before building:
 - Electron
 - React
 - TypeScript
+- Tailwind CSS
 - Google Calendar API
 - CSS animations first, heavier animation tooling only if needed
 
@@ -52,6 +53,8 @@ Read these before building:
 - Artifact-based overlay system is wired
 - Built-in artifact selector is wired with ghost, rocket, train, UFO, cat, paper plane, santa, and minimal variants
 - Artifact picker now shows inline previews before you trigger the overlay demo
+- Control panel now uses the imported neo-brutal template screens instead of the earlier scaffold UI
+- Renderer is split into `src/app`, `src/features`, and `src/shared` for newcomer-friendly navigation
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
 - Reminder lead time is configurable from the control panel
@@ -90,4 +93,25 @@ Pika-Boo/
     |-- animations.md
     |-- notifications.md
     `-- google-auth.md
+```
+
+## Renderer Shape
+
+```text
+src/
+|-- app/
+|   |-- App.tsx
+|   `-- useDesktopControlState.ts
+|-- features/
+|   |-- control-panel/
+|   |   |-- components/
+|   |   `-- pages/
+|   `-- overlay/
+|-- shared/
+|   |-- data/
+|   |-- ui/
+|   `-- contracts.ts
+|-- env.d.ts
+|-- index.css
+`-- main.tsx
 ```

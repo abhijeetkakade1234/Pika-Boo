@@ -24,3 +24,4 @@
 - Added inline artifact previews to the control panel
 - Added NSIS installer build and installer-artifact smoke verification
 - Added an in-app proof-gap list for remaining Google and installer verification work
+- Rebuilt the renderer around the imported neo-brutal UI templates with feature-folder structure
