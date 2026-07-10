@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useDesktopControlState } from './useDesktopControlState';
 import { ControlPanelShell } from '../features/control-panel/components/ControlPanelShell';
 import type { ControlScreen } from '../features/control-panel/components/SidebarNav';
-import { ArtifactGalleryPage } from '../features/control-panel/pages/ArtifactGalleryPage';
+import { FlightsPage } from '../features/control-panel/pages/FlightsPage';
 import { MissionControlPage } from '../features/control-panel/pages/MissionControlPage';
-import { PlaceholderPage } from '../features/control-panel/pages/PlaceholderPage';
+import { MomentsPage } from '../features/control-panel/pages/MomentsPage';
 import { SettingsPage } from '../features/control-panel/pages/SettingsPage';
+import { ThemesPage } from '../features/control-panel/pages/ThemesPage';
 import { OverlayPage } from '../features/overlay/OverlayPage';
 import type { ReminderPayload } from '../shared/contracts';
 
@@ -31,6 +32,12 @@ function OverlayEntry() {
 function ControlPanelEntry() {
   const [activeScreen, setActiveScreen] = useState<ControlScreen>('mission-control');
   const desktop = useDesktopControlState();
+  const primaryCalendar = desktop.runtimeStatus?.availableCalendars.find((calendar) => calendar.primary);
+  const selectedCalendarCount = desktop.runtimeStatus?.availableCalendars.filter((calendar) => calendar.selected).length ?? 0;
+  const accountLabel = primaryCalendar?.summary ?? (desktop.authStatus?.connected ? 'Google Connected' : 'Not Connected');
+  const accountMeta = desktop.authStatus?.connected
+    ? `${selectedCalendarCount} calendar${selectedCalendarCount === 1 ? '' : 's'} selected`
+    : 'Connect Google Calendar';
 
   const goToSettingsIfNeeded = async () => {
     setActiveScreen('settings');
@@ -45,13 +52,37 @@ function ControlPanelEntry() {
             runtimeStatus={desktop.runtimeStatus}
             onNavigate={setActiveScreen}
             onConnectGoogle={desktop.authStatus?.configured ? desktop.connectGoogle : goToSettingsIfNeeded}
+            onClearHistory={desktop.clearReminderHistory}
+            onShowDemo={() => window.pikaBoo.showOverlayDemo()}
+            onPollNow={desktop.pollNow}
+            onTogglePaused={desktop.togglePaused}
+          />
+        );
+      case 'moments':
+        return (
+          <MomentsPage
+            runtimeStatus={desktop.runtimeStatus}
+            busy={desktop.busy}
+            onPollNow={desktop.pollNow}
+            onOpenSettings={() => setActiveScreen('settings')}
+          />
+        );
+      case 'flights':
+        return (
+          <FlightsPage
+            runtimeStatus={desktop.runtimeStatus}
+            busy={desktop.busy}
+            onPollNow={desktop.pollNow}
+            onTogglePaused={desktop.togglePaused}
+            onClearHistory={desktop.clearReminderHistory}
             onShowDemo={() => window.pikaBoo.showOverlayDemo()}
           />
         );
-      case 'artifacts':
+      case 'themes':
         return (
-          <ArtifactGalleryPage
+          <ThemesPage
             artifactId={desktop.artifactId}
+            runtimeStatus={desktop.runtimeStatus}
             onSelectArtifact={desktop.saveArtifact}
             onShowDemo={() => window.pikaBoo.showOverlayDemo()}
           />
@@ -72,28 +103,7 @@ function ControlPanelEntry() {
             onToggleStartup={desktop.toggleStartup}
             onTogglePaused={desktop.togglePaused}
             onPollNow={desktop.pollNow}
-            onSaveReminderLeadMinutes={desktop.saveReminderLeadMinutes}
-          />
-        );
-      case 'moments':
-        return (
-          <PlaceholderPage
-            title="Moments"
-            description="This feature folder is ready for ambient recap history, delivered reminder logs, and saved flights."
-          />
-        );
-      case 'flights':
-        return (
-          <PlaceholderPage
-            title="Flights"
-            description="This feature folder is ready for recurring reminder routes, delivery schedules, and future multi-account paths."
-          />
-        );
-      case 'themes':
-        return (
-          <PlaceholderPage
-            title="Themes"
-            description="This feature folder is ready for colorway packs, seasonal skins, and expanded companion styling."
+            onSaveSelectedCalendars={desktop.saveSelectedCalendars}
           />
         );
       default:
@@ -102,7 +112,12 @@ function ControlPanelEntry() {
   })();
 
   return (
-    <ControlPanelShell activeScreen={activeScreen} onNavigate={setActiveScreen}>
+    <ControlPanelShell
+      activeScreen={activeScreen}
+      onNavigate={setActiveScreen}
+      accountLabel={accountLabel}
+      accountMeta={accountMeta}
+    >
       {page}
     </ControlPanelShell>
   );

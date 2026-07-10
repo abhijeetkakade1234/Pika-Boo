@@ -46,9 +46,11 @@ Acceptance:
 Progress:
 
 - Main-process poller runs every 60 seconds
-- Google Calendar `events.list` fetch is wired for the primary calendar
-- Duplicate reminders are suppressed by event id plus start time
+- Google Calendar `calendarList.list` plus per-calendar `events.list` fetches are wired
+- Calendar selection is persisted from the settings screen
+- Duplicate reminders are suppressed by calendar id, event id, and start time
 - Reminder lead time is configurable from the control panel
+- Reminders are locally scheduled after each fetch so they can trigger exactly on the lead-time boundary
 - Runtime status now refreshes from background poll cycles
 - Pause mode is wired in tray plus control panel
 - Smoke verification now launches the built Electron app and catches renderer-load regressions
@@ -71,6 +73,7 @@ Progress:
 - Selected artifact is persisted and used by demo plus real reminders
 - Overlay now uses the imported magical reminder template as its base layout
 - Built-in artifact set now includes cat, paper plane, and santa variants
+- Artifact previews and brand logo now ship as local SVGs
 - Control panel and artifact gallery now use imported template screens as their base layout
 - Reminder artifacts can open meeting links directly when the event has one
 - Overlay now supports snooze and dismiss controls

@@ -112,10 +112,15 @@ export function useDesktopControlState() {
         const status = await window.pikaBoo.setSelectedArtifact(nextArtifactId);
         setRuntimeStatus(status);
       }, 'Failed to save artifact.'),
-    saveReminderLeadMinutes: (minutes: number) =>
+    clearReminderHistory: () =>
       runTask(async () => {
-        const status = await window.pikaBoo.setReminderLeadMinutes(minutes);
+        const status = await window.pikaBoo.clearReminderHistory();
         setRuntimeStatus(status);
-      }, 'Failed to save reminder lead time.'),
+      }, 'Failed to clear reminder history.'),
+    saveSelectedCalendars: (calendarIds: string[]) =>
+      runTask(async () => {
+        const status = await window.pikaBoo.setSelectedCalendars(calendarIds);
+        setRuntimeStatus(status);
+      }, 'Failed to save selected calendars.'),
   };
 }

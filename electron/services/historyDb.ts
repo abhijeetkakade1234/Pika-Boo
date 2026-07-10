@@ -1,0 +1,250 @@
+import { app } from 'electron';
+import path from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
+import type {
+  CalendarEventSummary,
+  CalendarEventTimelineEntry,
+  ReminderDeliverySummary,
+  ReminderPayload,
+} from '../../src/shared/contracts';
+
+let db: DatabaseSync | null = null;
+
+function getDb(): DatabaseSync {
+  if (db) {
+    return db;
+  }
+
+  db = new DatabaseSync(path.join(app.getPath('userData'), 'pikaboo.sqlite'));
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reminder_history (
+      reminder_id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL,
+      artifact_id TEXT NOT NULL,
+      meeting_url TEXT,
+      delivered_at INTEGER NOT NULL
+    ) STRICT;
+
+    CREATE TABLE IF NOT EXISTS event_timeline (
+      event_key TEXT PRIMARY KEY,
+      event_id TEXT NOT NULL,
+      calendar_id TEXT NOT NULL,
+      calendar_summary TEXT NOT NULL,
+      summary TEXT NOT NULL,
+      start_at TEXT NOT NULL,
+      meeting_url TEXT,
+      last_seen_at INTEGER NOT NULL
+    ) STRICT;
+
+    CREATE TABLE IF NOT EXISTS snoozed_reminders (
+      reminder_id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL,
+      artifact_id TEXT NOT NULL,
+      meeting_url TEXT,
+      wake_at INTEGER NOT NULL
+    ) STRICT;
+
+    CREATE INDEX IF NOT EXISTS idx_reminder_history_delivered_at
+      ON reminder_history(delivered_at DESC);
+
+    CREATE INDEX IF NOT EXISTS idx_event_timeline_start_at
+      ON event_timeline(start_at ASC);
+
+    CREATE INDEX IF NOT EXISTS idx_snoozed_reminders_wake_at
+      ON snoozed_reminders(wake_at ASC);
+  `);
+
+  return db;
+}
+
+function eventKey(event: CalendarEventSummary): string {
+  return `${event.calendarId}:${event.id}:${event.startAt}`;
+}
+
+export function recordReminderDelivery(reminder: ReminderPayload): void {
+  const database = getDb();
+  const deliveredAt = Date.now();
+  database
+    .prepare(`
+      INSERT INTO reminder_history (
+        reminder_id,
+        title,
+        subtitle,
+        artifact_id,
+        meeting_url,
+        delivered_at
+      ) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(reminder_id) DO UPDATE SET
+        title = excluded.title,
+        subtitle = excluded.subtitle,
+        artifact_id = excluded.artifact_id,
+        meeting_url = excluded.meeting_url,
+        delivered_at = excluded.delivered_at
+    `)
+    .run(
+      reminder.reminderId,
+      reminder.title,
+      reminder.subtitle,
+      reminder.artifactId,
+      reminder.meetingUrl ?? null,
+      deliveredAt,
+    );
+}
+
+export function saveSnoozedReminder(reminder: ReminderPayload, wakeAt: number): void {
+  const database = getDb();
+  database
+    .prepare(`
+      INSERT INTO snoozed_reminders (
+        reminder_id,
+        title,
+        subtitle,
+        artifact_id,
+        meeting_url,
+        wake_at
+      ) VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(reminder_id) DO UPDATE SET
+        title = excluded.title,
+        subtitle = excluded.subtitle,
+        artifact_id = excluded.artifact_id,
+        meeting_url = excluded.meeting_url,
+        wake_at = excluded.wake_at
+    `)
+    .run(
+      reminder.reminderId,
+      reminder.title,
+      reminder.subtitle,
+      reminder.artifactId,
+      reminder.meetingUrl ?? null,
+      wakeAt,
+    );
+}
+
+export function clearSnoozedReminder(reminderId: string): void {
+  const database = getDb();
+  database.prepare('DELETE FROM snoozed_reminders WHERE reminder_id = ?').run(reminderId);
+}
+
+export function listSnoozedReminders(): Array<ReminderPayload & { wakeAt: number }> {
+  const database = getDb();
+  return (database
+    .prepare(`
+      SELECT
+        reminder_id AS reminderId,
+        title,
+        subtitle,
+        artifact_id AS artifactId,
+        meeting_url AS meetingUrl,
+        wake_at AS wakeAt
+      FROM snoozed_reminders
+      ORDER BY wake_at ASC
+    `)
+    .all() as Array<Record<string, unknown>>).map((row) => ({
+      reminderId: String(row.reminderId),
+      title: String(row.title),
+      subtitle: String(row.subtitle),
+      artifactId: row.artifactId as ReminderPayload['artifactId'],
+      meetingUrl: row.meetingUrl ? String(row.meetingUrl) : undefined,
+      wakeAt: Number(row.wakeAt),
+    }));
+}
+
+export function upsertSeenEvents(events: CalendarEventSummary[]): void {
+  if (events.length === 0) {
+    return;
+  }
+
+  const database = getDb();
+  const statement = database.prepare(`
+    INSERT INTO event_timeline (
+      event_key,
+      event_id,
+      calendar_id,
+      calendar_summary,
+      summary,
+      start_at,
+      meeting_url,
+      last_seen_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(event_key) DO UPDATE SET
+      calendar_summary = excluded.calendar_summary,
+      summary = excluded.summary,
+      meeting_url = excluded.meeting_url,
+      last_seen_at = excluded.last_seen_at
+  `);
+  const now = Date.now();
+
+  for (const event of events) {
+    statement.run(
+      eventKey(event),
+      event.id,
+      event.calendarId,
+      event.calendarSummary,
+      event.summary,
+      event.startAt,
+      event.meetingUrl ?? null,
+      now,
+    );
+  }
+}
+
+export function listRecentReminders(limit = 25): ReminderDeliverySummary[] {
+  const database = getDb();
+  return (database
+    .prepare(`
+      SELECT
+        reminder_id AS reminderId,
+        title,
+        subtitle,
+        artifact_id AS artifactId,
+        meeting_url AS meetingUrl,
+        delivered_at AS deliveredAt
+      FROM reminder_history
+      ORDER BY delivered_at DESC
+      LIMIT ?
+    `)
+    .all(limit) as Array<Record<string, unknown>>).map((row) => ({
+      reminderId: String(row.reminderId),
+      title: String(row.title),
+      subtitle: String(row.subtitle),
+      artifactId: row.artifactId as ReminderDeliverySummary['artifactId'],
+      meetingUrl: row.meetingUrl ? String(row.meetingUrl) : undefined,
+      deliveredAt: Number(row.deliveredAt),
+    }));
+}
+
+export function clearReminderHistory(): void {
+  getDb().prepare('DELETE FROM reminder_history').run();
+}
+
+export function listEventTimeline(limit = 200): CalendarEventTimelineEntry[] {
+  const database = getDb();
+  return (database
+    .prepare(`
+      SELECT
+        event_id AS id,
+        calendar_id AS calendarId,
+        calendar_summary AS calendarSummary,
+        summary,
+        start_at AS startAt,
+        meeting_url AS meetingUrl,
+        last_seen_at AS lastSeenAt
+      FROM event_timeline
+      ORDER BY datetime(start_at) DESC
+      LIMIT ?
+    `)
+    .all(limit) as Array<Record<string, unknown>>).map((row) => ({
+      id: String(row.id),
+      calendarId: String(row.calendarId),
+      calendarSummary: String(row.calendarSummary),
+      summary: String(row.summary),
+      startAt: String(row.startAt),
+      meetingUrl: row.meetingUrl ? String(row.meetingUrl) : undefined,
+      sourceUrl: undefined,
+      lastSeenAt: Number(row.lastSeenAt),
+      kind: String(row.calendarId).startsWith('tasks:') ? 'task' : 'event',
+      label: String(row.calendarId).startsWith('tasks:') ? 'Task' : undefined,
+    }));
+}

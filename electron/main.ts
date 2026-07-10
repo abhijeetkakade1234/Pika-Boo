@@ -6,23 +6,31 @@ import { pathToFileURL } from 'node:url';
 import type { ArtifactId, ReminderPayload } from '../src/shared/contracts';
 import type { AuthStatus, GoogleOAuthConfig, OAuthImportResult, RuntimeStatus } from '../src/shared/contracts';
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
-import { CalendarPoller } from './services/poller';
+import {
+  clearReminderHistory,
+  clearSnoozedReminder,
+  listEventTimeline,
+  listRecentReminders,
+  listSnoozedReminders,
+  recordReminderDelivery,
+  saveSnoozedReminder,
+  upsertSeenEvents,
+} from './services/historyDb';
+import { CalendarPoller, EVENT_REMINDER_LEAD_TIMES } from './services/poller';
 import {
   getArtifactId,
   getGoogleOAuthConfig,
   getGoogleOAuthConfigForUi,
-  getReminderLeadMinutes,
   parseGoogleOAuthDesktopClient,
   saveArtifactId,
   saveGoogleOAuthConfig,
-  saveReminderLeadMinutes,
+  saveSelectedCalendarIds,
 } from './services/settingsStore';
-import { getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
+import { ensureStartupEnabledByDefault, getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
+import { WellnessScheduler } from './services/wellnessScheduler';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BOO_SMOKE_TEST === '1';
-const REMINDER_LEAD_OPTIONS = [1, 5, 10, 15, 30, 60];
-
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -33,11 +41,21 @@ const poller = new CalendarPoller(
   (payload) => {
     showOverlay(payload);
   },
+  (events) => {
+    upsertSeenEvents(events);
+  },
   () => {
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
   },
 );
+const wellnessScheduler = new WellnessScheduler((payload) => {
+  showOverlay(payload);
+});
+
+function getBundledAssetPath(...segments: string[]): string {
+  return path.join(__dirname, '..', '..', 'electron', 'assets', ...segments);
+}
 
 function getRendererUrl(hash = ''): string {
   const devUrl = process.env.VITE_DEV_SERVER_URL;
@@ -50,15 +68,22 @@ function getRendererUrl(hash = ''): string {
   return hash ? `${fileUrl}${hash}` : fileUrl;
 }
 
-function createMainWindow(): BrowserWindow {
+function createMainWindow(startHidden = false): BrowserWindow {
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
+  const width = Math.min(screenWidth, Math.max(1280, Math.floor(screenWidth * 0.84)));
+  const height = Math.min(screenHeight, Math.max(840, Math.floor(screenHeight * 0.86)));
+  const minWidth = Math.min(screenWidth, 1180);
+  const minHeight = Math.min(screenHeight, 760);
   const window = new BrowserWindow({
-    width: 960,
-    height: 680,
-    minWidth: 840,
-    minHeight: 560,
+    width,
+    height,
+    minWidth,
+    minHeight,
     title: 'Pika-Boo Control Panel',
+    icon: getBundledAssetPath('pika-boo-logo.png'),
     autoHideMenuBar: true,
     backgroundColor: '#12141a',
+    show: !startHidden,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -107,15 +132,7 @@ function createOverlayWindow(): BrowserWindow {
 }
 
 function createTrayIcon(): NativeImage {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
-      <rect width="64" height="64" rx="16" fill="#111827" />
-      <circle cx="24" cy="24" r="10" fill="#fde68a" />
-      <path d="M16 44c6-10 15-14 30-14" stroke="#93c5fd" stroke-width="6" stroke-linecap="round" fill="none" />
-    </svg>
-  `.trim();
-
-  return nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+  return nativeImage.createFromPath(getBundledAssetPath('pika-boo-logo.png'));
 }
 
 function showOverlay(payload: ReminderPayload): void {
@@ -124,6 +141,7 @@ function showOverlay(payload: ReminderPayload): void {
   }
 
   currentReminder = payload;
+  recordReminderDelivery(payload);
   overlayWindow.showInactive();
   overlayWindow.webContents.send('overlay:show', payload);
 
@@ -140,24 +158,48 @@ function hideOverlay(): void {
   overlayWindow?.hide();
 }
 
+function scheduleSnoozedReminder(payload: ReminderPayload, wakeAt: number): void {
+  const existingTimer = snoozeTimers.get(payload.reminderId);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+  }
+
+  const delayMs = Math.max(0, wakeAt - Date.now());
+  const timer = setTimeout(() => {
+    snoozeTimers.delete(payload.reminderId);
+    clearSnoozedReminder(payload.reminderId);
+    showOverlay(payload);
+  }, delayMs);
+
+  snoozeTimers.set(payload.reminderId, timer);
+}
+
+function restoreSnoozedReminders(): void {
+  for (const reminder of listSnoozedReminders()) {
+    scheduleSnoozedReminder(reminder, reminder.wakeAt);
+  }
+}
+
+function buildRuntimeStatus(): RuntimeStatus {
+  return {
+    ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+    startupSupported: isStartupSupported(),
+    currentReminder,
+    recentReminders: listRecentReminders(50),
+    eventTimeline: listEventTimeline(250),
+  };
+}
+
 function snoozeReminder(reminderId: string, minutes: number): void {
   if (!currentReminder || currentReminder.reminderId !== reminderId) {
     return;
   }
 
-  const existingTimer = snoozeTimers.get(reminderId);
-  if (existingTimer) {
-    clearTimeout(existingTimer);
-  }
-
   hideOverlay();
   const payload = currentReminder;
-  const timer = setTimeout(() => {
-    snoozeTimers.delete(reminderId);
-    showOverlay(payload);
-  }, minutes * 60_000);
-
-  snoozeTimers.set(reminderId, timer);
+  const wakeAt = Date.now() + minutes * 60_000;
+  saveSnoozedReminder(payload, wakeAt);
+  scheduleSnoozedReminder(payload, wakeAt);
 }
 
 function dismissReminder(reminderId: string): void {
@@ -166,6 +208,8 @@ function dismissReminder(reminderId: string): void {
     clearTimeout(existingTimer);
     snoozeTimers.delete(reminderId);
   }
+
+  clearSnoozedReminder(reminderId);
 
   if (currentReminder?.reminderId === reminderId) {
     hideOverlay();
@@ -178,7 +222,6 @@ function refreshTrayMenu(): void {
   }
 
   const runtime = poller.getStatus(getStartupEnabled(), isStartupSupported());
-  const currentLeadMinutes = runtime.reminderLeadMinutes;
   tray.setContextMenu(
     Menu.buildFromTemplate([
       {
@@ -219,19 +262,9 @@ function refreshTrayMenu(): void {
           mainWindow?.webContents.send('runtime:updated');
         },
       },
-      {
-        label: 'Reminder lead time',
-        submenu: REMINDER_LEAD_OPTIONS.map((minutes) => ({
-          label: `${minutes} minute${minutes === 1 ? '' : 's'}`,
-          type: 'radio',
-          checked: currentLeadMinutes === minutes,
-          click: () => {
-            saveReminderLeadMinutes(minutes);
-            refreshTrayMenu();
-            mainWindow?.webContents.send('runtime:updated');
-          },
-        })),
-      },
+      { label: `Reminder cadence: ${EVENT_REMINDER_LEAD_TIMES.join('m • ')}m` },
+      { label: 'Morning briefing: 8:00 AM' },
+      { label: 'Wellness: eyes 50m | water 90m' },
       {
         label: 'Launch on Windows login',
         type: 'checkbox',
@@ -269,11 +302,10 @@ function wireTray(): void {
 
 function wireIpc(): void {
   ipcMain.handle('app:show-overlay-demo', () => {
-    const reminderLeadMinutes = getReminderLeadMinutes();
     showOverlay({
       reminderId: 'demo-reminder',
       title: 'Meeting with Albert',
-      subtitle: `Starts in ${reminderLeadMinutes} minute${reminderLeadMinutes === 1 ? '' : 's'}`,
+      subtitle: `Reminder cadence ${EVENT_REMINDER_LEAD_TIMES.join('m / ')}m`,
       artifactId: getArtifactId(),
     });
   });
@@ -348,8 +380,7 @@ function wireIpc(): void {
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return {
-      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
-      startupSupported: isStartupSupported(),
+      ...buildRuntimeStatus(),
     };
   });
 
@@ -361,6 +392,7 @@ function wireIpc(): void {
     }
 
     const status = await beginGoogleOAuth(config);
+    await poller.poll();
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return status;
@@ -369,67 +401,65 @@ function wireIpc(): void {
   ipcMain.handle('auth:disconnect', (): AuthStatus => {
     const config = getGoogleOAuthConfig();
     clearGoogleTokens();
+    void poller.poll();
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return getAuthStatus(config);
   });
 
   ipcMain.handle('runtime:get-status', (): RuntimeStatus => {
-    return {
-      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
-      startupSupported: isStartupSupported(),
-    };
+    return buildRuntimeStatus();
   });
 
   ipcMain.handle('runtime:set-startup-enabled', (_event, enabled: boolean): RuntimeStatus => {
     setStartupEnabled(enabled);
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
-    return {
-      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
-      startupSupported: isStartupSupported(),
-    };
+    return buildRuntimeStatus();
   });
 
   ipcMain.handle('runtime:poll-now', async (): Promise<RuntimeStatus> => {
     await poller.poll();
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
-    return {
-      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
-      startupSupported: isStartupSupported(),
-    };
+    return buildRuntimeStatus();
   });
 
   ipcMain.handle('runtime:set-paused', (_event, paused: boolean): RuntimeStatus => {
     poller.setPaused(paused);
+    wellnessScheduler.setPaused(paused);
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
-    return {
-      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
-      startupSupported: isStartupSupported(),
-    };
+    return buildRuntimeStatus();
   });
 
-  ipcMain.handle('runtime:set-reminder-lead-minutes', (_event, reminderLeadMinutes: number): RuntimeStatus => {
-    saveReminderLeadMinutes(reminderLeadMinutes);
+  ipcMain.handle('runtime:clear-reminder-history', (): RuntimeStatus => {
+    clearReminderHistory();
+    mainWindow?.webContents.send('runtime:updated');
+    return buildRuntimeStatus();
+  });
+
+  ipcMain.handle('runtime:set-selected-calendars', async (_event, calendarIds: string[]): Promise<RuntimeStatus> => {
+    saveSelectedCalendarIds(calendarIds);
+    await poller.poll();
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
-    return {
-      ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
-      startupSupported: isStartupSupported(),
-    };
+    return buildRuntimeStatus();
   });
 }
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
+  ensureStartupEnabledByDefault();
+  const startHidden = process.argv.includes('--hidden');
 
-  mainWindow = createMainWindow();
+  mainWindow = createMainWindow(startHidden);
   overlayWindow = createOverlayWindow();
   wireTray();
   wireIpc();
+  restoreSnoozedReminders();
   poller.start();
+  wellnessScheduler.start();
 
   if (isSmokeTest) {
     mainWindow.hide();
@@ -447,7 +477,7 @@ async function bootstrap(): Promise<void> {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      mainWindow = createMainWindow();
+      mainWindow = createMainWindow(false);
       overlayWindow = createOverlayWindow();
       refreshTrayMenu();
     } else {

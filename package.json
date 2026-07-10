@@ -14,9 +14,9 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "lint": "npm run build",
     "smoke": "npm run build && node scripts/smoke.js",
-    "package:dir": "npm run build && electron-builder --win dir",
+    "package:dir": "npm run build && node scripts/package-win.js dir",
     "package:smoke": "npm run package:dir && node scripts/package-smoke.js",
-    "package:installer": "npm run build && electron-builder --win nsis",
+    "package:installer": "npm run build && node scripts/package-win.js installer",
     "package:installer:smoke": "npm run package:installer && node scripts/installer-smoke.js"
   },
   "repository": {
@@ -41,10 +41,17 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
+      "electron/assets/**/*",
       "package.json"
     ],
     "win": {
-      "target": "dir"
+      "target": "dir",
+      "icon": "electron/assets/pika-boo-logo.ico"
+    },
+    "nsis": {
+      "installerIcon": "electron/assets/pika-boo-logo.ico",
+      "uninstallerIcon": "electron/assets/pika-boo-logo.ico",
+      "installerHeaderIcon": "electron/assets/pika-boo-logo.ico"
     }
   },
   "devDependencies": {

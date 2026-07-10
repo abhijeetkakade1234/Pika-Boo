@@ -1,4 +1,12 @@
 import type { ArtifactId } from '../contracts';
+import catImage from '../assets/artifacts/cat.svg';
+import ghostImage from '../assets/artifacts/ghost.svg';
+import minimalImage from '../assets/artifacts/minimal.svg';
+import paperPlaneImage from '../assets/artifacts/paper-plane.svg';
+import rocketImage from '../assets/artifacts/rocket.svg';
+import santaImage from '../assets/artifacts/santa.svg';
+import trainImage from '../assets/artifacts/train.svg';
+import ufoImage from '../assets/artifacts/ufo.svg';
 
 export interface ArtifactDetails {
   id: ArtifactId;
@@ -18,8 +26,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Rocket',
     title: 'Cosmic Voyager',
     description: 'A high-fidelity rocket artifact that pulses with a warm amber glow during focus sessions.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuARzeS3Z8VVuMijwUFetHDmL-IyXRoY_izBF55OOf0gBi9QLwo9vFtbhGRTvf7YyGfa9FfCGG_4OvcT2NAegP8H9b50XbHvyyzSreeTZ4mP5LbnWk49IYVv1XlOgez220q9eWeJ5AzPw8eLR3Re5_wf5b9PuTm60liSXWxmW08WG68o0NmAtsa1vhTwpXHGFbu5GFifqoK0S-aBXvHk4naOvuqKWOvFOSEZb8A83_4XHQ1wwjeL_xZzKA',
+    imageUrl: rocketImage,
     galleryColor: 'bg-white',
     previewColor: 'bg-sky-blue',
     previewState: 'State: Active',
@@ -30,8 +37,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Paper Plane',
     title: 'Drift',
     description: 'Quietly gliding across your workspace to keep your attention in motion.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDJ_0cCVDAO4K2EIGGWHcAkEWVQ8K5Z1t3oR9HFxG3gyfenmrD67TO2WRYrl8h1B4dzf6DNVZrp1CkiHN1L305dYLfXne_uVg2nEAYfRaIllCfDcEGxGAc6tkmLYXj9KsM9r1sMaw3pkAt7Ax_HoKg4FlbvuC5U6BRosRwmUO3TRi6gAcOnKjTSf1YWERkLlVYcdSD_o7jsAqKlTFKeJZYtrJWROd45HEAKCyHK8bYD87HAvswRC4rjUA',
+    imageUrl: paperPlaneImage,
     galleryColor: 'bg-sky-blue',
     previewColor: 'bg-surface-container-highest',
     previewState: 'Peek mode active',
@@ -42,8 +48,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Ghost',
     title: 'Spook',
     description: 'A friendly companion that appears only when your next task needs attention.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAryom8KJBIbv0mU-oCsUiFvQZ1D_x-61sNLYZqc3P0ZD_qCV_Nf531HGXIxHZ8uZ1bcZ2dEL6zMvC_9YKNcPiZZv18NmVvWCcmNsh5hi7fH42pR3JV3tSCek_pGObCMbtVYHaJsIQ-NaZ_YKRJc3lauub9ncJc7bT2U4V2UtIS40GRxV7ii8Q4SePy1TsZhikHmNMJfla84zzJzy-VeOrcSK5sGwIbmYkGBkKntMj12OHN6JphJTpjPw',
+    imageUrl: ghostImage,
     galleryColor: 'bg-flamingo-pink',
     previewColor: 'bg-lavender',
     previewState: 'State: Idle',
@@ -54,8 +59,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Cat',
     title: 'Mochi',
     description: 'A moon-soft cat artifact that settles next to your focus sessions.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBM9zzl1KpafDpIvdUX2kadVx6Y02pZthhNnVJMRJG6GzOx0wUV03zhK6Y0-0jCRJhnUUMjMXIpF1fSLfv_-RcNwWSg3l9qXnHgIXYfhWTJvgspX03Bbpt0ixYAEUXCwT7AHLRTzSStK3FDQQcXECiBJ-dOJm1omTNsh1qAcBi6oIgYUjuPax18hzXNXDitqTQem-Ey5CFKfXbXuXXdsJh3FPfAlsakx6O5EgB6FulKOb3dnSRmTEAjfg',
+    imageUrl: catImage,
     galleryColor: 'bg-sage-green',
     previewColor: 'bg-flamingo-pink',
     previewState: 'State: Cozy',
@@ -66,8 +70,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Train',
     title: 'Night Line',
     description: 'Pulls your reminders across the top edge in a steady, readable rhythm.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDJ_0cCVDAO4K2EIGGWHcAkEWVQ8K5Z1t3oR9HFxG3gyfenmrD67TO2WRYrl8h1B4dzf6DNVZrp1CkiHN1L305dYLfXne_uVg2nEAYfRaIllCfDcEGxGAc6tkmLYXj9KsM9r1sMaw3pkAt7Ax_HoKg4FlbvuC5U6BRosRwmUO3TRi6gAcOnKjTSf1YWERkLlVYcdSD_o7jsAqKlTFKeJZYtrJWROd45HEAKCyHK8bYD87HAvswRC4rjUA',
+    imageUrl: trainImage,
     galleryColor: 'bg-lavender',
     previewColor: 'bg-sage-green',
     previewState: 'State: Rolling',
@@ -78,8 +81,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'UFO',
     title: 'Orbit',
     description: 'A hovering artifact with a quiet sci-fi pulse and wide-screen presence.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBrGBdM-ja_hgv2x7vZZjv_PTQ94QsDnrVmPJjCd9dDlvWJi12v3SE-hMQsewkAUewSj59RLHUhCEW7eK49ECuUYfVUC5SU6zhAgFIecqg_BjeSCHaaRQaylP4Ty17nEAVVT1ngXix4JzspoW0u0W4-jNCFHBu8iy1MH3VPrQ9sSVRW8F7ghbkjkTofaLpRG7_MjL2MHnpBa07twlhW1H54_8PBCg6HVerBiwDPlxRMlu6BIl4oZdWIow',
+    imageUrl: ufoImage,
     galleryColor: 'bg-honey-yellow',
     previewColor: 'bg-sky-blue',
     previewState: 'State: Scanning',
@@ -90,8 +92,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Santa',
     title: 'Holiday Run',
     description: 'Brings a festive overlay pass when you want reminders to feel playful.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDJ_0cCVDAO4K2EIGGWHcAkEWVQ8K5Z1t3oR9HFxG3gyfenmrD67TO2WRYrl8h1B4dzf6DNVZrp1CkiHN1L305dYLfXne_uVg2nEAYfRaIllCfDcEGxGAc6tkmLYXj9KsM9r1sMaw3pkAt7Ax_HoKg4FlbvuC5U6BRosRwmUO3TRi6gAcOnKjTSf1YWERkLlVYcdSD_o7jsAqKlTFKeJZYtrJWROd45HEAKCyHK8bYD87HAvswRC4rjUA',
+    imageUrl: santaImage,
     galleryColor: 'bg-flamingo-pink',
     previewColor: 'bg-honey-yellow',
     previewState: 'State: Cheerful',
@@ -102,8 +103,7 @@ export const artifactCatalog: ArtifactDetails[] = [
     label: 'Minimal',
     title: 'Mark',
     description: 'A stripped-back artifact for when you only want the message and motion.',
-    imageUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuB3sbBan7l2pY2C3NoKbGMxMIW5Q-kcrr62acaPKR7qOQCOyUEqXHJLSRTvKKdcE5P5pOxT48I39DsrE_nU3qdc0YAXVVJNzTlysGFCM7dHn0c7KJQGOMybBALCJfzMMiHNBUsL9xRVTW6VuRq-K0Y3gU7bW-i75kLJ3OeASEKduofzNEZHouDUPq6fwZX2fuO5-VfVu-7FHIN4Cy1QCeb8SvqzJ4wtRCWY4QQaRUOpF57qFoSq_yDByw',
+    imageUrl: minimalImage,
     galleryColor: 'bg-surface-container-highest',
     previewColor: 'bg-white',
     previewState: 'State: Minimal',

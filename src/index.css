@@ -19,6 +19,7 @@
     background: #f8f2e7;
     color: #1a1b25;
     font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
   }
 
   button,
@@ -86,7 +87,15 @@
   }
 
   .action-pill {
-    @apply rounded-full border border-white/50 bg-white/70 px-4 py-2 font-label-caps text-label-caps uppercase text-sidebar-charcoal shadow-sm transition hover:bg-white active:scale-95;
+    @apply inline-flex items-center justify-center rounded-full border border-white/50 bg-white/70 px-4 py-2 text-center font-label-caps text-label-caps uppercase text-sidebar-charcoal shadow-sm transition hover:bg-white active:scale-95;
+  }
+
+  .text-card-title {
+    @apply break-words text-pretty;
+  }
+
+  .text-card-copy {
+    @apply break-words whitespace-normal;
   }
 }
 
