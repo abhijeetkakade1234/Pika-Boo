@@ -9,6 +9,7 @@ import { SettingsPage } from '../features/control-panel/pages/SettingsPage';
 import { ThemesPage } from '../features/control-panel/pages/ThemesPage';
 import { OverlayPage } from '../features/overlay/OverlayPage';
 import type { ReminderPayload } from '../shared/contracts';
+import { getPikaBooBridge } from '../shared/pikaBooBridge';
 
 const defaultReminder: ReminderPayload = {
   reminderId: 'demo-reminder',
@@ -18,10 +19,11 @@ const defaultReminder: ReminderPayload = {
 };
 
 function OverlayEntry() {
+  const pikaBoo = getPikaBooBridge();
   const [reminder, setReminder] = useState<ReminderPayload>(defaultReminder);
 
   useEffect(() => {
-    return window.pikaBoo.onOverlayShow((payload) => {
+    return pikaBoo.onOverlayShow((payload) => {
       setReminder(payload);
     });
   }, []);
@@ -30,7 +32,14 @@ function OverlayEntry() {
 }
 
 function ControlPanelEntry() {
-  const [activeScreen, setActiveScreen] = useState<ControlScreen>('mission-control');
+  const pikaBoo = getPikaBooBridge();
+  const initialScreen = (() => {
+    const value = new URLSearchParams(window.location.search).get('screen');
+    return value === 'mission-control' || value === 'moments' || value === 'flights' || value === 'themes' || value === 'settings'
+      ? value
+      : 'mission-control';
+  })();
+  const [activeScreen, setActiveScreen] = useState<ControlScreen>(initialScreen);
   const desktop = useDesktopControlState();
   const primaryCalendar = desktop.runtimeStatus?.availableCalendars.find((calendar) => calendar.primary);
   const selectedCalendarCount = desktop.runtimeStatus?.availableCalendars.filter((calendar) => calendar.selected).length ?? 0;
@@ -55,7 +64,7 @@ function ControlPanelEntry() {
             onNavigate={setActiveScreen}
             onConnectGoogle={desktop.authStatus?.configured ? desktop.connectGoogle : goToSettingsIfNeeded}
             onClearHistory={desktop.clearReminderHistory}
-            onShowDemo={() => window.pikaBoo.showOverlayDemo()}
+            onShowDemo={() => pikaBoo.showOverlayDemo()}
             onPollNow={desktop.pollNow}
             onTogglePaused={desktop.togglePaused}
           />
@@ -78,7 +87,7 @@ function ControlPanelEntry() {
             onPollNow={desktop.pollNow}
             onTogglePaused={desktop.togglePaused}
             onClearHistory={desktop.clearReminderHistory}
-            onShowDemo={() => window.pikaBoo.showOverlayDemo()}
+            onShowDemo={() => pikaBoo.showOverlayDemo()}
           />
         );
       case 'themes':
@@ -93,7 +102,7 @@ function ControlPanelEntry() {
             onSaveThemeRule={desktop.saveThemeRule}
             onAddThemeRule={desktop.addThemeRule}
             onDeleteThemeRule={desktop.deleteThemeRule}
-            onShowDemo={() => window.pikaBoo.showOverlayDemo()}
+            onShowDemo={() => pikaBoo.showOverlayDemo()}
           />
         );
       case 'settings':

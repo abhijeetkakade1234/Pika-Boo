@@ -4,6 +4,7 @@ import standBreakImage from '../../shared/assets/wellness/stand-break.svg';
 import timeAwarenessImage from '../../shared/assets/wellness/time-awareness.svg';
 import waterBreakImage from '../../shared/assets/wellness/water-break.svg';
 import type { ReminderPayload } from '../../shared/contracts';
+import { getPikaBooBridge } from '../../shared/pikaBooBridge';
 
 function parseReminderSubtitle(subtitle: string) {
   if (subtitle.startsWith('Starts in ')) {
@@ -43,6 +44,7 @@ export function OverlayPage({
 }: {
   reminder: ReminderPayload;
 }) {
+  const pikaBoo = getPikaBooBridge();
   const visual = getReminderImage(reminder);
   const meta = parseReminderSubtitle(reminder.subtitle);
 
@@ -72,7 +74,7 @@ export function OverlayPage({
             {reminder.meetingUrl ? (
               <button
                 type="button"
-                onClick={() => void window.pikaBoo.openExternal(reminder.meetingUrl!)}
+                onClick={() => void pikaBoo.openExternal(reminder.meetingUrl!)}
                 className="flex flex-col text-left transition hover:opacity-80"
               >
                 <h1 className="text-[24px] tracking-tight text-on-background">{reminder.title}</h1>
@@ -95,14 +97,14 @@ export function OverlayPage({
           <div className="flex items-center gap-4">
             <button
               type="button"
-              onClick={() => void window.pikaBoo.dismissReminder(reminder.reminderId)}
+              onClick={() => void pikaBoo.dismissReminder(reminder.reminderId)}
               className="flex items-center justify-center rounded-full p-3 text-on-surface-variant transition-colors hover:bg-black/5"
             >
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
             <button
               type="button"
-              onClick={() => void window.pikaBoo.snoozeReminder(reminder.reminderId, 5)}
+              onClick={() => void pikaBoo.snoozeReminder(reminder.reminderId, 5)}
               className="h-12 rounded-full bg-primary px-8 font-label-caps text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
               Snooze

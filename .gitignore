@@ -2,3 +2,5 @@ node_modules/
 dist/
 dist-electron/
 release/
+boo_desktop_assistant_ui_template/
+release-test/
