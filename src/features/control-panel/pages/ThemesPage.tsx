@@ -33,7 +33,7 @@ export function ThemesPage({
             <div className="mt-4 font-headline-lg text-headline-lg text-sidebar-charcoal">{selectedArtifact.title}</div>
             <div className="mt-2 text-sm text-sidebar-charcoal/60">{selectedArtifact.description}</div>
             <div className="mt-4 text-xs uppercase tracking-widest text-sidebar-charcoal/50">
-              Reminder cadence: {(runtimeStatus?.reminderLeadTimes ?? [30, 5, 1]).join('m • ')}m
+              Reminder cadence: {(runtimeStatus?.reminderLeadTimes ?? [30, 5, 1]).join(' / ')}m
             </div>
           </div>
         </section>
@@ -49,14 +49,16 @@ export function ThemesPage({
                   key={artifact.id}
                   type="button"
                   onClick={() => void onSelectArtifact(artifact.id)}
-                  className={`flex flex-col items-start gap-4 rounded-[24px] bg-white/55 p-4 text-left transition hover:bg-white sm:flex-row sm:items-center ${selected ? 'ring-4 ring-primary/20' : ''}`}
+                  className={`flex min-h-[180px] flex-col rounded-[24px] bg-white/55 p-5 text-left transition hover:bg-white ${selected ? 'ring-4 ring-primary/20' : ''}`}
                 >
-                  <img className="h-16 w-16 shrink-0 object-contain" src={artifact.imageUrl} alt={artifact.label} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-card-title font-body-md font-bold text-sidebar-charcoal">{artifact.label}</div>
-                    <div className="text-card-copy mt-1 text-sm text-sidebar-charcoal/60">{artifact.previewHint}</div>
+                  <div className="flex items-start gap-4">
+                    <img className="h-16 w-16 shrink-0 object-contain" src={artifact.imageUrl} alt={artifact.label} />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-card-title font-body-md font-bold text-sidebar-charcoal">{artifact.label}</div>
+                      <div className="text-card-copy mt-1 text-sm text-sidebar-charcoal/60">{artifact.previewHint}</div>
+                    </div>
                   </div>
-                  <div className="shrink-0 self-start font-label-caps text-label-caps uppercase text-primary sm:self-center">
+                  <div className="mt-auto pt-4 font-label-caps text-label-caps uppercase text-primary">
                     {selected ? 'Selected' : 'Use'}
                   </div>
                 </button>
