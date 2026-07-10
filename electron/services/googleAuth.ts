@@ -462,8 +462,6 @@ export async function listUpcomingEvents(
         }
 
         const tasksUrl = new URL(`https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(taskList.id)}/tasks`);
-        tasksUrl.searchParams.set('dueMin', timeMin.toISOString());
-        tasksUrl.searchParams.set('dueMax', timeMax.toISOString());
         tasksUrl.searchParams.set('showCompleted', 'false');
         tasksUrl.searchParams.set('showDeleted', 'false');
         tasksUrl.searchParams.set('showHidden', 'false');

@@ -74,7 +74,7 @@ export function MomentsPage({
             <div>
               <h2 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Upcoming Moments</h2>
               <p className="mt-2 text-sm text-sidebar-charcoal/70">
-                This is the real 30-day lookahead from the selected Google calendars.
+                This is the real 30-day calendar lookahead plus every pending Google Task we can load.
               </p>
             </div>
             <div className="rounded-full bg-white/50 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
@@ -115,7 +115,7 @@ export function MomentsPage({
               ))
             ) : (
               <div className="rounded-[24px] bg-white/40 p-6 text-sidebar-charcoal/70">
-                No upcoming events in the next 30 days. Add a test event, then refresh.
+                No upcoming events or pending tasks loaded yet. Add a test item, then refresh.
               </div>
             )}
           </div>

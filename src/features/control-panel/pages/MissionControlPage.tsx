@@ -63,7 +63,9 @@ export function MissionControlPage({
   onPollNow: () => Promise<void>;
   onTogglePaused: () => Promise<void>;
 }) {
-  const nextEvent = runtimeStatus?.upcomingEvents[0];
+  const nextEvent =
+    runtimeStatus?.upcomingEvents.find((event) => new Date(event.startAt).getTime() > Date.now()) ??
+    runtimeStatus?.upcomingEvents[0];
   const selectedArtifact = getArtifactDetails(runtimeStatus?.artifactId ?? 'ghost');
   const taskMoments = (runtimeStatus?.upcomingEvents ?? []).filter((event) => event.kind === 'task').slice(0, 4);
   const upcomingEvents = (runtimeStatus?.upcomingEvents ?? []).filter((event) => event.kind !== 'task').slice(0, 4);
@@ -264,8 +266,8 @@ export function MissionControlPage({
             </button>
           </div>
           <div className="space-y-4">
-            {taskMoments.length > 0 ? (
-              taskMoments.map((task) => (
+              {taskMoments.length > 0 ? (
+                taskMoments.map((task) => (
                 <div key={`${task.calendarId}:${task.id}:${task.startAt}`} className="rounded-[24px] bg-white/45 p-5">
                   <div className="text-card-title font-body-md font-bold text-sidebar-charcoal">{task.summary}</div>
                   <div className="text-card-copy mt-1 text-sm text-sidebar-charcoal/60">{task.calendarSummary}</div>
@@ -281,7 +283,7 @@ export function MissionControlPage({
               ))
             ) : (
               <div className="rounded-[24px] bg-white/40 p-6 text-sidebar-charcoal/70">
-                No pending tasks in the current 30-day window.
+                No pending tasks loaded from Google Tasks.
               </div>
             )}
           </div>
