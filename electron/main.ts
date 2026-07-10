@@ -23,19 +23,28 @@ import { CalendarPoller, EVENT_REMINDER_LEAD_TIMES } from './services/poller';
 import { listThemeRules } from './services/reminderArtifacts';
 import {
   getArtifactId,
+  getEyeBreakEnabled,
   getGoogleOAuthConfig,
   getGoogleOAuthConfigForUi,
+  getStandBreakEnabled,
+  getTimeAwarenessEnabled,
+  getWaterBreakEnabled,
   getWellnessEnabled,
   parseGoogleOAuthDesktopClient,
   saveArtifactId,
+  saveEyeBreakEnabled,
   saveGoogleOAuthConfig,
   saveSelectedCalendarIds,
+  saveStandBreakEnabled,
+  saveTimeAwarenessEnabled,
+  saveWaterBreakEnabled,
   saveWellnessEnabled,
 } from './services/settingsStore';
 import { ensureStartupEnabledByDefault, getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
 import {
   EYE_BREAK_INTERVAL_MINUTES,
   STAND_BREAK_INTERVAL_MINUTES,
+  TIME_AWARENESS_INTERVAL_MINUTES,
   WATER_BREAK_INTERVAL_MINUTES,
   WellnessScheduler,
 } from './services/wellnessScheduler';
@@ -197,13 +206,17 @@ function restoreSnoozedReminders(): void {
 }
 
 function syncWellnessScheduler(paused = poller.getStatus(getStartupEnabled(), isStartupSupported()).paused): void {
-  wellnessScheduler.setPaused(paused || !getWellnessEnabled());
+  wellnessScheduler.setPaused(paused);
 }
 
 function buildRuntimeStatus(): RuntimeStatus {
   return {
     ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
     wellnessEnabled: getWellnessEnabled(),
+    eyeBreakEnabled: getEyeBreakEnabled(),
+    standBreakEnabled: getStandBreakEnabled(),
+    waterBreakEnabled: getWaterBreakEnabled(),
+    timeAwarenessEnabled: getTimeAwarenessEnabled(),
     startupSupported: isStartupSupported(),
     currentReminder,
     recentReminders: listRecentReminders(50),
@@ -298,6 +311,17 @@ function refreshTrayMenu(): void {
         },
       },
       { label: `Wellness cadence: eyes ${EYE_BREAK_INTERVAL_MINUTES}m / stand ${STAND_BREAK_INTERVAL_MINUTES}m / water ${WATER_BREAK_INTERVAL_MINUTES}m` },
+      {
+        label: 'Time awareness',
+        type: 'checkbox',
+        checked: getTimeAwarenessEnabled(),
+        click: () => {
+          saveTimeAwarenessEnabled(!getTimeAwarenessEnabled());
+          refreshTrayMenu();
+          mainWindow?.webContents.send('runtime:updated');
+        },
+      },
+      { label: `Time checks: every ${TIME_AWARENESS_INTERVAL_MINUTES}m` },
       {
         label: 'Launch on Windows login',
         type: 'checkbox',
@@ -494,6 +518,28 @@ function wireIpc(): void {
   ipcMain.handle('runtime:set-wellness-enabled', (_event, enabled: boolean): RuntimeStatus => {
     saveWellnessEnabled(enabled);
     syncWellnessScheduler();
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return buildRuntimeStatus();
+  });
+
+  ipcMain.handle('runtime:set-wellness-type-enabled', (_event, kind: 'eye' | 'stand' | 'water', enabled: boolean): RuntimeStatus => {
+    if (kind === 'eye') {
+      saveEyeBreakEnabled(enabled);
+    } else if (kind === 'stand') {
+      saveStandBreakEnabled(enabled);
+    } else {
+      saveWaterBreakEnabled(enabled);
+    }
+
+    syncWellnessScheduler();
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return buildRuntimeStatus();
+  });
+
+  ipcMain.handle('runtime:set-time-awareness-enabled', (_event, enabled: boolean): RuntimeStatus => {
+    saveTimeAwarenessEnabled(enabled);
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return buildRuntimeStatus();

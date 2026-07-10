@@ -34,6 +34,8 @@ declare global {
       setStartupEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
       setPaused: (paused: boolean) => Promise<RuntimeStatus>;
       setWellnessEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
+      setWellnessTypeEnabled: (kind: 'eye' | 'stand' | 'water', enabled: boolean) => Promise<RuntimeStatus>;
+      setTimeAwarenessEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
       clearReminderHistory: () => Promise<RuntimeStatus>;
       pollNow: () => Promise<RuntimeStatus>;
       setSelectedCalendars: (calendarIds: string[]) => Promise<RuntimeStatus>;

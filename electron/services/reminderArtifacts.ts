@@ -9,7 +9,7 @@ const defaultThemeRules: ThemeRuleAssignment[] = [
   { key: 'focus-time', label: 'Focus time', artifactId: 'minimal', builtin: true },
   { key: 'water-break', label: 'Water break', artifactId: 'ufo', builtin: true },
   { key: 'eye-break', label: 'Eye relax break', artifactId: 'ghost', builtin: true },
-  { key: 'stand-break', label: 'Stand and stretch', artifactId: 'cat', builtin: true },
+  { key: 'stand-break', label: 'Stand and stretch', artifactId: 'train', builtin: true },
   { key: 'morning-briefing', label: 'Morning briefing', artifactId: 'rocket', builtin: true },
 ];
 

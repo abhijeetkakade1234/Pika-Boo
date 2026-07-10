@@ -4,6 +4,24 @@ Pika-Boo is a Windows desktop reminder app that makes calendar events hard to mi
 
 Instead of standard notifications, it shows a moving banner across the top of the screen so your eyes catch the motion while you work.
 
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Pika-Boo dashboard" width="48%" />
+  <img src="docs/screenshots/moments.png" alt="Pika-Boo moments page" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/themes.png" alt="Pika-Boo themes page" width="48%" />
+  <img src="docs/screenshots/overlay.png" alt="Pika-Boo overlay reminder" width="48%" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/settings.png" alt="Pika-Boo settings page with sanitized mock OAuth values" width="80%" />
+</p>
+
+Settings screenshots use sanitized mock data so no live OAuth keys or private config are exposed.
+
 ## MVP
 
 - Google sign-in

@@ -38,6 +38,10 @@ contextBridge.exposeInMainWorld('pikaBoo', {
   setPaused: (paused: boolean) => ipcRenderer.invoke('runtime:set-paused', paused) as Promise<RuntimeStatus>,
   setWellnessEnabled: (enabled: boolean) =>
     ipcRenderer.invoke('runtime:set-wellness-enabled', enabled) as Promise<RuntimeStatus>,
+  setWellnessTypeEnabled: (kind: 'eye' | 'stand' | 'water', enabled: boolean) =>
+    ipcRenderer.invoke('runtime:set-wellness-type-enabled', kind, enabled) as Promise<RuntimeStatus>,
+  setTimeAwarenessEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke('runtime:set-time-awareness-enabled', enabled) as Promise<RuntimeStatus>,
   clearReminderHistory: () => ipcRenderer.invoke('runtime:clear-reminder-history') as Promise<RuntimeStatus>,
   pollNow: () => ipcRenderer.invoke('runtime:poll-now') as Promise<RuntimeStatus>,
   setSelectedCalendars: (calendarIds: string[]) =>

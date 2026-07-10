@@ -1,5 +1,10 @@
 import { getArtifactDetails } from '../../shared/data/artifacts';
+import eyeBreakImage from '../../shared/assets/wellness/eye-break.svg';
+import standBreakImage from '../../shared/assets/wellness/stand-break.svg';
+import timeAwarenessImage from '../../shared/assets/wellness/time-awareness.svg';
+import waterBreakImage from '../../shared/assets/wellness/water-break.svg';
 import type { ReminderPayload } from '../../shared/contracts';
+import { getPikaBooBridge } from '../../shared/pikaBooBridge';
 
 function parseReminderSubtitle(subtitle: string) {
   if (subtitle.startsWith('Starts in ')) {
@@ -13,12 +18,34 @@ function parseReminderSubtitle(subtitle: string) {
   return { badge: 'Reminder', detail: subtitle };
 }
 
+function getReminderImage(reminder: ReminderPayload): { imageUrl: string; label: string } {
+  if (reminder.reminderId.startsWith('eye-break:')) {
+    return { imageUrl: eyeBreakImage, label: 'Eye Break' };
+  }
+
+  if (reminder.reminderId.startsWith('stand-break:')) {
+    return { imageUrl: standBreakImage, label: 'Stand Break' };
+  }
+
+  if (reminder.reminderId.startsWith('water-break:')) {
+    return { imageUrl: waterBreakImage, label: 'Water Break' };
+  }
+
+  if (reminder.reminderId.startsWith('time-awareness:')) {
+    return { imageUrl: timeAwarenessImage, label: 'Time Awareness' };
+  }
+
+  const artifact = getArtifactDetails(reminder.artifactId);
+  return { imageUrl: artifact.imageUrl, label: artifact.label };
+}
+
 export function OverlayPage({
   reminder,
 }: {
   reminder: ReminderPayload;
 }) {
-  const artifact = getArtifactDetails(reminder.artifactId);
+  const pikaBoo = getPikaBooBridge();
+  const visual = getReminderImage(reminder);
   const meta = parseReminderSubtitle(reminder.subtitle);
 
   return (
@@ -40,14 +67,14 @@ export function OverlayPage({
           <div className="flex items-center gap-8">
             <div className="relative -mt-6 h-24 w-24">
               <div className="animate-mascot flex h-full w-full items-center justify-center">
-                <img className="h-20 w-20 object-contain drop-shadow-lg" src={artifact.imageUrl} alt={artifact.label} />
+                <img className="h-20 w-20 object-contain drop-shadow-lg" src={visual.imageUrl} alt={visual.label} />
               </div>
             </div>
 
             {reminder.meetingUrl ? (
               <button
                 type="button"
-                onClick={() => void window.pikaBoo.openExternal(reminder.meetingUrl!)}
+                onClick={() => void pikaBoo.openExternal(reminder.meetingUrl!)}
                 className="flex flex-col text-left transition hover:opacity-80"
               >
                 <h1 className="text-[24px] tracking-tight text-on-background">{reminder.title}</h1>
@@ -70,14 +97,14 @@ export function OverlayPage({
           <div className="flex items-center gap-4">
             <button
               type="button"
-              onClick={() => void window.pikaBoo.dismissReminder(reminder.reminderId)}
+              onClick={() => void pikaBoo.dismissReminder(reminder.reminderId)}
               className="flex items-center justify-center rounded-full p-3 text-on-surface-variant transition-colors hover:bg-black/5"
             >
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
             <button
               type="button"
-              onClick={() => void window.pikaBoo.snoozeReminder(reminder.reminderId, 5)}
+              onClick={() => void pikaBoo.snoozeReminder(reminder.reminderId, 5)}
               className="h-12 rounded-full bg-primary px-8 font-label-caps text-white shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
             >
               Snooze

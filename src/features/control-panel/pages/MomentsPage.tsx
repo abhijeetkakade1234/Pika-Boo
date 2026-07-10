@@ -19,13 +19,11 @@ export function MomentsPage({
   busy,
   pendingAction,
   onPollNow,
-  onOpenSettings,
 }: {
   runtimeStatus: RuntimeStatus | null;
   busy: boolean;
   pendingAction: string;
   onPollNow: () => Promise<void>;
-  onOpenSettings: () => void;
 }) {
   const calendars = runtimeStatus?.availableCalendars ?? [];
   const selectedCalendars = calendars.filter((calendar) => calendar.selected);
@@ -37,30 +35,25 @@ export function MomentsPage({
     <>
       <TopBar
         rightSlot={
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => void onPollNow()} disabled={busy} className="action-pill">
-              {pendingAction === 'poll-now' ? 'Refreshing...' : 'Refresh'}
-            </button>
-            <button type="button" onClick={onOpenSettings} className="action-pill">
-              Calendars
-            </button>
-          </div>
+          <button type="button" onClick={() => void onPollNow()} disabled={busy} className="action-pill">
+            {pendingAction === 'poll-now' ? 'Refreshing...' : 'Refresh'}
+          </button>
         }
       />
 
       <div className="grid grid-cols-12 gap-bento-gutter">
         <section className="col-span-12 rounded-[28px] bg-white p-widget-padding shadow-card-soft lg:col-span-4">
           <h1 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Selected Calendars</h1>
-          <div className="mt-6 max-h-[420px] space-y-3 overflow-y-auto pr-2">
+          <div className="mt-6 max-h-[420px] space-y-3 overflow-y-auto overflow-x-hidden pr-2">
             {selectedCalendars.length > 0 ? (
               selectedCalendars.map((calendar) => (
                 <div key={calendar.id} className="rounded-2xl bg-surface-container px-4 py-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <span
-                      className="h-3 w-3 rounded-full border border-sidebar-charcoal/10"
+                      className="h-3 w-3 shrink-0 rounded-full border border-sidebar-charcoal/10"
                       style={{ backgroundColor: calendar.backgroundColor ?? '#d1d5db' }}
                     />
-                    <span className="text-sm font-semibold text-sidebar-charcoal">{calendar.summary}</span>
+                    <span className="min-w-0 break-all text-sm font-semibold text-sidebar-charcoal">{calendar.summary}</span>
                   </div>
                 </div>
               ))
