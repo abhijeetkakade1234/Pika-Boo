@@ -221,7 +221,7 @@ export function clearReminderHistory(): void {
 
 export function listEventTimeline(limit = 200): CalendarEventTimelineEntry[] {
   const database = getDb();
-  return (database
+  const rows = (database
     .prepare(`
       SELECT
         event_id AS id,
@@ -235,7 +235,9 @@ export function listEventTimeline(limit = 200): CalendarEventTimelineEntry[] {
       ORDER BY datetime(start_at) DESC
       LIMIT ?
     `)
-    .all(limit) as Array<Record<string, unknown>>).map((row) => ({
+    .all(limit) as Array<Record<string, unknown>>);
+
+  return rows.map((row): CalendarEventTimelineEntry => ({
       id: String(row.id),
       calendarId: String(row.calendarId),
       calendarSummary: String(row.calendarSummary),
@@ -246,5 +248,5 @@ export function listEventTimeline(limit = 200): CalendarEventTimelineEntry[] {
       lastSeenAt: Number(row.lastSeenAt),
       kind: String(row.calendarId).startsWith('tasks:') ? 'task' : 'event',
       label: String(row.calendarId).startsWith('tasks:') ? 'Task' : undefined,
-    }));
+    })).filter((row) => new Date(row.startAt).getTime() <= Date.now());
 }

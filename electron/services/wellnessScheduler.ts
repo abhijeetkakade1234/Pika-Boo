@@ -1,4 +1,5 @@
 import type { ReminderPayload } from '../../src/shared/contracts';
+import { getArtifactForNamedReminder } from './reminderArtifacts';
 
 const DAY_START_HOUR = 9;
 const DAY_END_HOUR = 19;
@@ -65,9 +66,9 @@ export class WellnessScheduler {
 
       this.onReminder({
         reminderId: `eye-break:${next.toISOString()}`,
-        title: '👀 Relax your eyes',
+        title: 'Relax your eyes',
         subtitle: 'Look away for 20 seconds and let your eyes reset.',
-        artifactId: 'ghost',
+        artifactId: getArtifactForNamedReminder('relax your eyes', 'ghost'),
       });
       this.scheduleEyeBreak();
     }, Math.max(1_000, next.getTime() - now.getTime()));
@@ -84,9 +85,9 @@ export class WellnessScheduler {
 
       this.onReminder({
         reminderId: `water-break:${next.toISOString()}`,
-        title: '💧 Water break',
+        title: 'Water break',
         subtitle: 'Take a sip and reset before the next stretch.',
-        artifactId: 'ufo',
+        artifactId: getArtifactForNamedReminder('water break', 'ufo'),
       });
       this.scheduleWaterBreak();
     }, Math.max(1_000, next.getTime() - now.getTime()));

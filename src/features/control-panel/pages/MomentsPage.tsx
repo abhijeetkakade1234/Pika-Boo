@@ -27,7 +27,8 @@ export function MomentsPage({
 }) {
   const calendars = runtimeStatus?.availableCalendars ?? [];
   const selectedCalendars = calendars.filter((calendar) => calendar.selected);
-  const events = runtimeStatus?.upcomingEvents ?? [];
+  const events = (runtimeStatus?.upcomingEvents ?? []).filter((event) => event.kind !== 'task');
+  const tasks = (runtimeStatus?.upcomingEvents ?? []).filter((event) => event.kind === 'task');
   const eventTimeline = runtimeStatus?.eventTimeline.slice(0, 12) ?? [];
 
   return (
@@ -48,7 +49,7 @@ export function MomentsPage({
       <div className="grid grid-cols-12 gap-bento-gutter">
         <section className="col-span-12 rounded-[28px] bg-white p-widget-padding shadow-card-soft lg:col-span-4">
           <h1 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Selected Calendars</h1>
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 max-h-[420px] space-y-3 overflow-y-auto pr-2">
             {selectedCalendars.length > 0 ? (
               selectedCalendars.map((calendar) => (
                 <div key={calendar.id} className="rounded-2xl bg-surface-container px-4 py-3">
@@ -69,20 +70,67 @@ export function MomentsPage({
           </div>
         </section>
 
-        <section className="col-span-12 rounded-[28px] bg-sage-green p-widget-padding shadow-card-green lg:col-span-8">
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <h2 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Upcoming Moments</h2>
+        <section className="col-span-12 rounded-[28px] bg-lavender p-widget-padding shadow-card-purple lg:col-span-8">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Pending Tasks</h2>
               <p className="mt-2 text-sm text-sidebar-charcoal/70">
-                This is the real 30-day calendar lookahead plus every pending Google Task we can load.
+                Every incomplete Google Task we can load, not just the next 30 days.
               </p>
             </div>
-            <div className="rounded-full bg-white/50 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
+            <div className="shrink-0 rounded-full bg-white/50 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
+              {tasks.length} loaded
+            </div>
+          </div>
+
+          <div className="mt-8 max-h-[420px] space-y-4 overflow-y-auto overflow-x-hidden pr-2">
+            {tasks.length > 0 ? (
+              tasks.map((task) => (
+                <div
+                  key={`${task.calendarId}:${task.id}:${task.startAt}`}
+                  className="flex flex-col gap-3 rounded-[24px] bg-white/45 p-5 md:flex-row md:items-center md:justify-between"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-card-title font-body-md font-bold text-sidebar-charcoal">{task.summary}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-sidebar-charcoal/60">
+                      <span>{task.calendarSummary}</span>
+                      <span className="rounded-full bg-white/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
+                        Task
+                      </span>
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex flex-wrap items-center gap-3">
+                    <div className="text-sm text-sidebar-charcoal/70">{formatEventDate(task.startAt)}</div>
+                    {task.sourceUrl ? (
+                      <button type="button" onClick={() => void window.pikaBoo.openExternal(task.sourceUrl!)} className="action-pill">
+                        Open in Google
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[24px] bg-white/40 p-6 text-sidebar-charcoal/70">
+                No pending tasks loaded yet.
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="col-span-12 rounded-[28px] bg-sage-green p-widget-padding shadow-card-green">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Upcoming Moments</h2>
+              <p className="mt-2 text-sm text-sidebar-charcoal/70">
+                This is the real 30-day calendar lookahead from the selected Google calendars.
+              </p>
+            </div>
+            <div className="shrink-0 rounded-full bg-white/50 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
               {events.length} loaded
             </div>
           </div>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 max-h-[520px] space-y-4 overflow-y-auto overflow-x-hidden pr-2">
             {events.length > 0 ? (
               events.map((event) => (
                 <div
@@ -98,7 +146,7 @@ export function MomentsPage({
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-0 flex flex-wrap items-center gap-3">
                     <div className="text-sm text-sidebar-charcoal/70">{formatEventDate(event.startAt)}</div>
                     {event.meetingUrl ? (
                       <button type="button" onClick={() => void window.pikaBoo.openExternal(event.meetingUrl!)} className="action-pill">
@@ -115,26 +163,26 @@ export function MomentsPage({
               ))
             ) : (
               <div className="rounded-[24px] bg-white/40 p-6 text-sidebar-charcoal/70">
-                No upcoming events or pending tasks loaded yet. Add a test item, then refresh.
+                No upcoming calendar events in the next 30 days. Add a test event, then refresh.
               </div>
             )}
           </div>
         </section>
 
         <section className="col-span-12 rounded-[28px] bg-white p-widget-padding shadow-card-soft">
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <h2 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Seen Event History</h2>
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Past Moment History</h2>
               <p className="mt-2 text-sm text-sidebar-charcoal/70">
-                Stored locally from successful syncs so the app keeps context across relaunches.
+                Stored locally after syncs, but only shows moments whose start time has already passed.
               </p>
             </div>
-            <div className="rounded-full bg-surface-container px-4 py-2 text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
+            <div className="shrink-0 rounded-full bg-surface-container px-4 py-2 text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/70">
               {eventTimeline.length} stored
             </div>
           </div>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 max-h-[520px] space-y-4 overflow-y-auto overflow-x-hidden pr-2">
             {eventTimeline.length > 0 ? (
               eventTimeline.map((event) => (
                 <div
@@ -150,7 +198,7 @@ export function MomentsPage({
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-sidebar-charcoal/60">
+                  <div className="min-w-0 flex flex-wrap items-center gap-3 text-sm text-sidebar-charcoal/60">
                     <div>Start: {formatEventDate(event.startAt)}</div>
                     <div>
                       Seen: {new Date(event.lastSeenAt).toLocaleString([], {
@@ -170,7 +218,7 @@ export function MomentsPage({
               ))
             ) : (
               <div className="rounded-[24px] bg-surface-container p-6 text-sidebar-charcoal/70">
-                No event history stored yet. Run a sync after connecting calendars.
+                No past moment history yet. Let a few events pass, then refresh.
               </div>
             )}
           </div>
