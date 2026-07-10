@@ -10,6 +10,7 @@ Instead of standard notifications, it shows a moving banner across the top of th
 - Google Calendar read access
 - Runs on Windows startup
 - Background polling every 60 seconds
+- Exact local reminder scheduling after each poll
 - Animated artifact reminder across the top of the screen
 - Auto hide after 8 seconds
 
@@ -28,6 +29,7 @@ Read these before building:
 - Electron
 - React
 - TypeScript
+- Tailwind CSS
 - Google Calendar API
 - CSS animations first, heavier animation tooling only if needed
 
@@ -52,11 +54,16 @@ Read these before building:
 - Artifact-based overlay system is wired
 - Built-in artifact selector is wired with ghost, rocket, train, UFO, cat, paper plane, santa, and minimal variants
 - Artifact picker now shows inline previews before you trigger the overlay demo
+- Control panel now uses the imported neo-brutal template screens instead of the earlier scaffold UI
+- Renderer is split into `src/app`, `src/features`, and `src/shared` for newcomer-friendly navigation
 - Google OAuth flow is wired
 - Calendar polling and startup toggles are wired
+- Calendar selection is wired for the connected Google account
+- Polling now stages reminders locally so they can fire on the exact lead-time boundary instead of the next minute tick
 - Reminder lead time is configurable from the control panel
 - Reminder lead time is also adjustable from the tray menu
 - Reminder artifacts can open meeting links directly
+- Artifact visuals and the app logo now ship locally instead of using remote preview URLs
 - Control panel shows the remaining live-verification and installer proof gaps
 - Windows startup is only supported in a packaged app, not the dev shell
 - Unpacked Windows packaging is wired and smoke-verified
@@ -90,4 +97,25 @@ Pika-Boo/
     |-- animations.md
     |-- notifications.md
     `-- google-auth.md
+```
+
+## Renderer Shape
+
+```text
+src/
+|-- app/
+|   |-- App.tsx
+|   `-- useDesktopControlState.ts
+|-- features/
+|   |-- control-panel/
+|   |   |-- components/
+|   |   `-- pages/
+|   `-- overlay/
+|-- shared/
+|   |-- data/
+|   |-- ui/
+|   `-- contracts.ts
+|-- env.d.ts
+|-- index.css
+`-- main.tsx
 ```

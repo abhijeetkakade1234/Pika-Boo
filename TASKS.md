@@ -46,13 +46,15 @@ Acceptance:
 Progress:
 
 - Main-process poller runs every 60 seconds
-- Google Calendar `events.list` fetch is wired for the primary calendar
-- Duplicate reminders are suppressed by event id plus start time
+- Google Calendar `calendarList.list` plus per-calendar `events.list` fetches are wired
+- Calendar selection is persisted from the settings screen
+- Duplicate reminders are suppressed by calendar id, event id, and start time
 - Reminder lead time is configurable from the control panel
+- Reminders are locally scheduled after each fetch so they can trigger exactly on the lead-time boundary
 - Runtime status now refreshes from background poll cycles
 - Pause mode is wired in tray plus control panel
 - Smoke verification now launches the built Electron app and catches renderer-load regressions
-- Control panel now shows the fetched upcoming events instead of only a count
+- Control panel now surfaces live runtime state inside the imported template UI
 - Live event fetch still needs a connected Google account to verify end-to-end
 
 ### Task 4: Reminder Overlay
@@ -69,9 +71,10 @@ Progress:
 
 - Overlay now uses an artifact system instead of a plain banner
 - Selected artifact is persisted and used by demo plus real reminders
-- Artifact definitions are split into renderer-side files instead of one inline overlay block
+- Overlay now uses the imported magical reminder template as its base layout
 - Built-in artifact set now includes cat, paper plane, and santa variants
-- Control panel now shows inline artifact previews for faster selection
+- Artifact previews and brand logo now ship as local SVGs
+- Control panel and artifact gallery now use imported template screens as their base layout
 - Reminder artifacts can open meeting links directly when the event has one
 - Overlay now supports snooze and dismiss controls
 - Control panel now surfaces the remaining live-verification proof gaps
@@ -93,6 +96,22 @@ Progress:
 - `win-unpacked` packaging and packaged exe smoke launch now pass
 - NSIS installer build now emits a real installer exe
 - Installed-run startup verification is still pending
+
+### Task 6: Renderer Structure
+
+Status: completed
+
+Acceptance:
+
+- Renderer is split into app shell, feature folders, and shared modules
+- Newcomers can find control panel pages, overlay, shared data, and shared UI quickly
+
+Progress:
+
+- `src/app` now owns composition and shared desktop-state loading
+- `src/features/control-panel` now owns screen-specific components and pages
+- `src/features/overlay` now owns the reminder overlay view
+- `src/shared/data` and `src/shared/ui` now hold reusable renderer modules
 
 ## Verification Notes
 

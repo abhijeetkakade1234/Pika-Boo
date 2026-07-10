@@ -8,6 +8,14 @@ export interface ReminderPayload {
   meetingUrl?: string;
 }
 
+export interface ReminderDeliverySummary extends ReminderPayload {
+  deliveredAt: number;
+}
+
+export interface CalendarEventTimelineEntry extends CalendarEventSummary {
+  lastSeenAt: number;
+}
+
 export interface GoogleOAuthConfig {
   clientId: string;
   clientSecret?: string;
@@ -28,9 +36,22 @@ export interface AuthStatus {
 
 export interface CalendarEventSummary {
   id: string;
+  calendarId: string;
+  calendarSummary: string;
   summary: string;
   startAt: string;
   meetingUrl?: string;
+  sourceUrl?: string;
+  kind: 'event' | 'task';
+  label?: string;
+}
+
+export interface CalendarListEntry {
+  id: string;
+  summary: string;
+  primary: boolean;
+  selected: boolean;
+  backgroundColor?: string;
 }
 
 export interface RuntimeStatus {
@@ -39,9 +60,14 @@ export interface RuntimeStatus {
   pollerRunning: boolean;
   paused: boolean;
   reminderLeadMinutes: number;
+  reminderLeadTimes: number[];
   lastPollAt: number | null;
   lastPollError: string | null;
   upcomingCount: number;
   upcomingEvents: CalendarEventSummary[];
+  availableCalendars: CalendarListEntry[];
   artifactId: ArtifactId;
+  currentReminder: ReminderPayload | null;
+  recentReminders: ReminderDeliverySummary[];
+  eventTimeline: CalendarEventTimelineEntry[];
 }

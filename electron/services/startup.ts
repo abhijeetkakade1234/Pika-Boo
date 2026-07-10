@@ -1,3 +1,4 @@
+import { getStartupConfigured, saveStartupConfigured } from './settingsStore';
 import { app } from 'electron';
 
 export function isStartupSupported(): boolean {
@@ -20,7 +21,17 @@ export function setStartupEnabled(enabled: boolean): boolean {
   app.setLoginItemSettings({
     openAtLogin: enabled,
     path: process.execPath,
+    args: enabled ? ['--hidden'] : [],
   });
+  saveStartupConfigured(true);
 
   return getStartupEnabled();
+}
+
+export function ensureStartupEnabledByDefault(): void {
+  if (!isStartupSupported() || getStartupConfigured()) {
+    return;
+  }
+
+  setStartupEnabled(true);
 }

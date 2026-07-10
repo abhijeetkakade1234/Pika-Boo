@@ -7,6 +7,9 @@ interface AppSettings {
   googleOAuth?: GoogleOAuthConfig;
   artifactId?: ArtifactId;
   reminderLeadMinutes?: number;
+  selectedCalendarIds?: string[];
+  startupConfigured?: boolean;
+  lastMorningBriefingDate?: string;
 }
 
 const DEFAULT_ARTIFACT_ID: ArtifactId = 'ghost';
@@ -108,4 +111,55 @@ export function saveReminderLeadMinutes(reminderLeadMinutes: number): number {
   fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
   fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
   return settings.reminderLeadMinutes;
+}
+
+export function getSelectedCalendarIds(): string[] {
+  return Array.from(
+    new Set(
+      (readSettings().selectedCalendarIds ?? [])
+        .map((calendarId) => calendarId.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
+export function saveSelectedCalendarIds(calendarIds: string[]): string[] {
+  const settings = readSettings();
+  settings.selectedCalendarIds = Array.from(
+    new Set(
+      calendarIds
+        .map((calendarId) => calendarId.trim())
+        .filter(Boolean),
+    ),
+  );
+
+  fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
+  return settings.selectedCalendarIds;
+}
+
+export function getStartupConfigured(): boolean {
+  return Boolean(readSettings().startupConfigured);
+}
+
+export function saveStartupConfigured(configured: boolean): boolean {
+  const settings = readSettings();
+  settings.startupConfigured = configured;
+
+  fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
+  return settings.startupConfigured;
+}
+
+export function getLastMorningBriefingDate(): string | null {
+  return readSettings().lastMorningBriefingDate ?? null;
+}
+
+export function saveLastMorningBriefingDate(dateKey: string): string {
+  const settings = readSettings();
+  settings.lastMorningBriefingDate = dateKey;
+
+  fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
+  return settings.lastMorningBriefingDate;
 }

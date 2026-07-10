@@ -14,9 +14,9 @@
     "build:electron": "tsc -p tsconfig.electron.json",
     "lint": "npm run build",
     "smoke": "npm run build && node scripts/smoke.js",
-    "package:dir": "npm run build && electron-builder --win dir",
+    "package:dir": "npm run build && node scripts/package-win.js dir",
     "package:smoke": "npm run package:dir && node scripts/package-smoke.js",
-    "package:installer": "npm run build && electron-builder --win nsis",
+    "package:installer": "npm run build && node scripts/package-win.js installer",
     "package:installer:smoke": "npm run package:installer && node scripts/installer-smoke.js"
   },
   "repository": {
@@ -41,10 +41,17 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
+      "electron/assets/**/*",
       "package.json"
     ],
     "win": {
-      "target": "dir"
+      "target": "dir",
+      "icon": "electron/assets/pika-boo-logo.ico"
+    },
+    "nsis": {
+      "installerIcon": "electron/assets/pika-boo-logo.ico",
+      "uninstallerIcon": "electron/assets/pika-boo-logo.ico",
+      "installerHeaderIcon": "electron/assets/pika-boo-logo.ico"
     }
   },
   "devDependencies": {
@@ -52,11 +59,14 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "autoprefixer": "^10.5.2",
     "concurrently": "^10.0.3",
     "cross-env": "^10.1.0",
     "electron": "^43.0.0",
     "electron-builder": "^26.15.3",
     "husky": "^9.1.7",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^3.4.17",
     "typescript": "^6.0.3",
     "vite": "^8.1.3",
     "wait-on": "^9.0.10"

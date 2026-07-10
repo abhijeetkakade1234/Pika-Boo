@@ -28,9 +28,10 @@ contextBridge.exposeInMainWorld('pikaBoo', {
   getRuntimeStatus: () => ipcRenderer.invoke('runtime:get-status') as Promise<RuntimeStatus>,
   setStartupEnabled: (enabled: boolean) => ipcRenderer.invoke('runtime:set-startup-enabled', enabled) as Promise<RuntimeStatus>,
   setPaused: (paused: boolean) => ipcRenderer.invoke('runtime:set-paused', paused) as Promise<RuntimeStatus>,
-  setReminderLeadMinutes: (reminderLeadMinutes: number) =>
-    ipcRenderer.invoke('runtime:set-reminder-lead-minutes', reminderLeadMinutes) as Promise<RuntimeStatus>,
+  clearReminderHistory: () => ipcRenderer.invoke('runtime:clear-reminder-history') as Promise<RuntimeStatus>,
   pollNow: () => ipcRenderer.invoke('runtime:poll-now') as Promise<RuntimeStatus>,
+  setSelectedCalendars: (calendarIds: string[]) =>
+    ipcRenderer.invoke('runtime:set-selected-calendars', calendarIds) as Promise<RuntimeStatus>,
   onRuntimeUpdated: (callback: () => void) => {
     const listener = () => {
       callback();

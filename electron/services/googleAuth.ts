@@ -1,14 +1,21 @@
-import { safeStorage, shell } from 'electron';
+import { safeStorage, shell, app } from 'electron';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { URL } from 'node:url';
-import { app } from 'electron';
-import type { AuthStatus, CalendarEventSummary, GoogleOAuthConfig } from '../../src/shared/contracts';
+import type {
+  AuthStatus,
+  CalendarEventSummary,
+  CalendarListEntry,
+  GoogleOAuthConfig,
+} from '../../src/shared/contracts';
 
-const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+const GOOGLE_SCOPES = [
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/tasks.readonly',
+].join(' ');
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 
@@ -30,7 +37,10 @@ interface TokenResponse {
 
 interface GoogleCalendarEvent {
   id: string;
+  status?: string;
   summary?: string;
+  eventType?: 'birthday' | 'default' | 'focusTime' | 'fromGmail' | 'outOfOffice' | 'workingLocation';
+  htmlLink?: string;
   start?: {
     dateTime?: string;
     date?: string;
@@ -45,6 +55,50 @@ interface GoogleCalendarEvent {
 
 interface EventsListResponse {
   items?: GoogleCalendarEvent[];
+}
+
+interface GoogleCalendarListItem {
+  id: string;
+  summary?: string;
+  summaryOverride?: string;
+  primary?: boolean;
+  backgroundColor?: string;
+}
+
+interface CalendarListResponse {
+  items?: GoogleCalendarListItem[];
+}
+
+interface GoogleTaskList {
+  id: string;
+  title?: string;
+}
+
+interface TaskListsResponse {
+  items?: GoogleTaskList[];
+}
+
+interface GoogleTask {
+  id: string;
+  title?: string;
+  due?: string;
+  status?: 'completed' | 'needsAction';
+  deleted?: boolean;
+  hidden?: boolean;
+  webViewLink?: string;
+  assignmentInfo?: {
+    linkToTask?: string;
+  };
+}
+
+interface TasksListResponse {
+  items?: GoogleTask[];
+}
+
+function toLocalAnchorIso(dateText: string, hour: number): string {
+  const [year, month, day] = dateText.split('-').map(Number);
+  const anchored = new Date(year, (month ?? 1) - 1, day ?? 1, hour, 0, 0, 0);
+  return anchored.toISOString();
 }
 
 function getTokenPath(): string {
@@ -126,6 +180,46 @@ async function refreshAccessToken(config: GoogleOAuthConfig, refreshToken: strin
 
   writeTokens(nextTokens);
   return nextTokens;
+}
+
+async function fetchGoogleJson<T>(config: GoogleOAuthConfig, url: URL): Promise<T> {
+  const accessToken = await getValidAccessToken(config);
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Google API request failed with ${response.status}.`);
+  }
+
+  return (await response.json()) as T;
+}
+
+function isScopeOrApiAvailabilityError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /Google API request failed with 40(1|3)|insufficient|scope|tasks/i.test(error.message);
+}
+
+function getEventLabel(eventType: GoogleCalendarEvent['eventType']): string | undefined {
+  switch (eventType) {
+    case 'birthday':
+      return 'Birthday';
+    case 'focusTime':
+      return 'Focus';
+    case 'fromGmail':
+      return 'From Gmail';
+    case 'outOfOffice':
+      return 'Out of Office';
+    case 'workingLocation':
+      return 'Working Location';
+    default:
+      return undefined;
+  }
 }
 
 async function startAuthorizationServer(): Promise<{
@@ -236,7 +330,7 @@ export async function beginGoogleOAuth(config: GoogleOAuthConfig): Promise<AuthS
   authUrl.searchParams.set('client_id', config.clientId);
   authUrl.searchParams.set('redirect_uri', authorization.redirectUri);
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('scope', GOOGLE_SCOPE);
+  authUrl.searchParams.set('scope', GOOGLE_SCOPES);
   authUrl.searchParams.set('access_type', 'offline');
   authUrl.searchParams.set('prompt', 'consent');
   authUrl.searchParams.set('code_challenge', codeChallenge);
@@ -281,42 +375,134 @@ export async function getValidAccessToken(config: GoogleOAuthConfig): Promise<st
   return refreshed.accessToken;
 }
 
-export async function listUpcomingEvents(config: GoogleOAuthConfig, timeMin: Date, timeMax: Date): Promise<CalendarEventSummary[]> {
-  const accessToken = await getValidAccessToken(config);
-  const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
-  url.searchParams.set('singleEvents', 'true');
-  url.searchParams.set('orderBy', 'startTime');
-  url.searchParams.set('timeMin', timeMin.toISOString());
-  url.searchParams.set('timeMax', timeMax.toISOString());
-  url.searchParams.set('maxResults', '20');
+export async function listCalendars(
+  config: GoogleOAuthConfig,
+  selectedCalendarIds: string[],
+): Promise<CalendarListEntry[]> {
+  const url = new URL('https://www.googleapis.com/calendar/v3/users/me/calendarList');
+  url.searchParams.set('minAccessRole', 'reader');
+  url.searchParams.set('showHidden', 'false');
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Calendar fetch failed with ${response.status}.`);
-  }
-
-  const payload = (await response.json()) as EventsListResponse;
+  const payload = await fetchGoogleJson<CalendarListResponse>(config, url);
+  const selectedIds = new Set(selectedCalendarIds);
 
   return (payload.items ?? [])
-    .map((event): CalendarEventSummary | null => {
-      const startAt = event.start?.dateTime ?? event.start?.date;
-      if (!event.id || !startAt) {
-        return null;
-      }
+    .filter((calendar) => Boolean(calendar.id))
+    .map((calendar) => ({
+      id: calendar.id,
+      summary: calendar.summaryOverride?.trim() || calendar.summary?.trim() || 'Untitled calendar',
+      primary: Boolean(calendar.primary),
+      selected: selectedIds.size > 0 ? selectedIds.has(calendar.id) : Boolean(calendar.primary),
+      backgroundColor: calendar.backgroundColor,
+    }))
+    .sort((left, right) => Number(right.primary) - Number(left.primary) || left.summary.localeCompare(right.summary));
+}
 
-      const meetingUrl = event.hangoutLink ?? event.conferenceData?.entryPoints?.find((entry) => entry.uri)?.uri;
+export async function listUpcomingEvents(
+  config: GoogleOAuthConfig,
+  calendars: CalendarListEntry[],
+  timeMin: Date,
+  timeMax: Date,
+): Promise<CalendarEventSummary[]> {
+  const activeCalendars = calendars.filter((calendar) => calendar.selected);
+  const payloads = await Promise.all(
+    activeCalendars.map(async (calendar) => {
+      const url = new URL(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendar.id)}/events`,
+      );
+      url.searchParams.set('singleEvents', 'true');
+      url.searchParams.set('orderBy', 'startTime');
+      url.searchParams.set('timeMin', timeMin.toISOString());
+      url.searchParams.set('timeMax', timeMax.toISOString());
+      url.searchParams.set('maxResults', '100');
 
       return {
-        id: event.id,
-        summary: event.summary?.trim() || 'Untitled event',
-        startAt,
-        meetingUrl,
+        calendar,
+        payload: await fetchGoogleJson<EventsListResponse>(config, url),
       };
-    })
+    }),
+  );
+
+  const calendarEvents = payloads
+    .flatMap(({ calendar, payload }) =>
+      (payload.items ?? []).map((event): CalendarEventSummary | null => {
+        const startAt = event.start?.dateTime ?? (event.start?.date ? toLocalAnchorIso(event.start.date, 9) : undefined);
+        if (!event.id || !startAt || event.status === 'cancelled') {
+          return null;
+        }
+
+        const meetingUrl = event.hangoutLink ?? event.conferenceData?.entryPoints?.find((entry) => entry.uri)?.uri;
+
+        return {
+          id: event.id,
+          calendarId: calendar.id,
+          calendarSummary: calendar.summary,
+          summary: event.summary?.trim() || 'Untitled event',
+          startAt,
+          meetingUrl,
+          sourceUrl: event.htmlLink,
+          kind: 'event',
+          label: getEventLabel(event.eventType),
+        };
+      }),
+    )
     .filter((event): event is CalendarEventSummary => event !== null);
+
+  let taskEvents: CalendarEventSummary[] = [];
+
+  try {
+    const taskListsUrl = new URL('https://tasks.googleapis.com/tasks/v1/users/@me/lists');
+    taskListsUrl.searchParams.set('maxResults', '100');
+    const taskLists = await fetchGoogleJson<TaskListsResponse>(config, taskListsUrl);
+
+    const taskPayloads = await Promise.all(
+      (taskLists.items ?? []).map(async (taskList) => {
+        if (!taskList.id) {
+          return null;
+        }
+
+        const tasksUrl = new URL(`https://tasks.googleapis.com/tasks/v1/lists/${encodeURIComponent(taskList.id)}/tasks`);
+        tasksUrl.searchParams.set('showCompleted', 'false');
+        tasksUrl.searchParams.set('showDeleted', 'false');
+        tasksUrl.searchParams.set('showHidden', 'false');
+        tasksUrl.searchParams.set('showAssigned', 'true');
+        tasksUrl.searchParams.set('maxResults', '100');
+
+        return {
+          taskList,
+          payload: await fetchGoogleJson<TasksListResponse>(config, tasksUrl),
+        };
+      }),
+    );
+
+    taskEvents = taskPayloads
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+      .flatMap(({ taskList, payload }) =>
+        (payload.items ?? []).map((task): CalendarEventSummary | null => {
+          if (!task.id || !task.due || task.status === 'completed' || task.deleted || task.hidden) {
+            return null;
+          }
+
+          return {
+            id: task.id,
+            calendarId: `tasks:${taskList.id}`,
+            calendarSummary: taskList.title?.trim() ? `Tasks | ${taskList.title.trim()}` : 'Tasks',
+            summary: task.title?.trim() || 'Untitled task',
+            startAt: toLocalAnchorIso(task.due.slice(0, 10), 9),
+            sourceUrl: task.assignmentInfo?.linkToTask ?? task.webViewLink,
+            kind: 'task',
+            label: 'Task',
+          };
+        }),
+      )
+      .filter((task): task is CalendarEventSummary => task !== null);
+  } catch (error) {
+    if (!isScopeOrApiAvailabilityError(error)) {
+      throw error;
+    }
+  }
+
+  return [...calendarEvents, ...taskEvents].sort(
+    (left, right) => new Date(left.startAt).getTime() - new Date(right.startAt).getTime(),
+  );
 }
