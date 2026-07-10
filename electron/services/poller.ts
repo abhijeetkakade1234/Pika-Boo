@@ -7,6 +7,7 @@ import {
   getLastMorningBriefingDate,
   getReminderLeadMinutes,
   getSelectedCalendarIds,
+  getWellnessEnabled,
   saveLastMorningBriefingDate,
   saveSelectedCalendarIds,
 } from './settingsStore';
@@ -102,6 +103,7 @@ export class CalendarPoller {
       startupSupported,
       pollerRunning: this.timer !== null,
       paused: this.paused,
+      wellnessEnabled: getWellnessEnabled(),
       reminderLeadMinutes: getReminderLeadMinutes(),
       reminderLeadTimes: EVENT_REMINDER_LEAD_TIMES,
       lastPollAt: this.lastPollAt,
@@ -277,7 +279,7 @@ export class CalendarPoller {
           reminderId: `morning-briefing:${todayKey}`,
           title: digest.title,
           subtitle: digest.subtitle,
-          artifactId: getArtifactForNamedReminder(digest.title, 'rocket'),
+          artifactId: getArtifactForNamedReminder('morning-briefing', 'rocket'),
           meetingUrl: digest.meetingUrl,
         });
       }, 10_000);
@@ -303,7 +305,7 @@ export class CalendarPoller {
         reminderId: `morning-briefing:${nextDayKey}`,
         title: digest.title,
         subtitle: digest.subtitle,
-        artifactId: getArtifactForNamedReminder(digest.title, 'rocket'),
+        artifactId: getArtifactForNamedReminder('morning-briefing', 'rocket'),
         meetingUrl: digest.meetingUrl,
       });
     }, nextMorning.getTime() - now.getTime());

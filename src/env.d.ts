@@ -7,6 +7,7 @@ import type {
   OAuthImportResult,
   ReminderPayload,
   RuntimeStatus,
+  ThemeRuleAssignment,
 } from './shared/contracts';
 
 declare global {
@@ -19,6 +20,10 @@ declare global {
       dismissReminder: (reminderId: string) => Promise<void>;
       getSelectedArtifact: () => Promise<ArtifactId>;
       setSelectedArtifact: (artifactId: ArtifactId) => Promise<RuntimeStatus>;
+      getThemeRules: () => Promise<ThemeRuleAssignment[]>;
+      setThemeRule: (key: ThemeRuleAssignment['key'], artifactId: ArtifactId) => Promise<ThemeRuleAssignment[]>;
+      addThemeRule: (label: string, matchText: string, artifactId: ArtifactId) => Promise<ThemeRuleAssignment[]>;
+      deleteThemeRule: (key: string) => Promise<ThemeRuleAssignment[]>;
       getAuthStatus: () => Promise<AuthStatus>;
       getGoogleOAuthConfig: () => Promise<GoogleOAuthConfig>;
       importGoogleOAuthConfig: () => Promise<OAuthImportResult>;
@@ -28,6 +33,7 @@ declare global {
       getRuntimeStatus: () => Promise<RuntimeStatus>;
       setStartupEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
       setPaused: (paused: boolean) => Promise<RuntimeStatus>;
+      setWellnessEnabled: (enabled: boolean) => Promise<RuntimeStatus>;
       clearReminderHistory: () => Promise<RuntimeStatus>;
       pollNow: () => Promise<RuntimeStatus>;
       setSelectedCalendars: (calendarIds: string[]) => Promise<RuntimeStatus>;

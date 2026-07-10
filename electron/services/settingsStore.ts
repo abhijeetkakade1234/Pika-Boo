@@ -8,12 +8,14 @@ interface AppSettings {
   artifactId?: ArtifactId;
   reminderLeadMinutes?: number;
   selectedCalendarIds?: string[];
+  wellnessEnabled?: boolean;
   startupConfigured?: boolean;
   lastMorningBriefingDate?: string;
 }
 
 const DEFAULT_ARTIFACT_ID: ArtifactId = 'ghost';
 const DEFAULT_REMINDER_LEAD_MINUTES = 5;
+const DEFAULT_WELLNESS_ENABLED = true;
 const MIN_REMINDER_LEAD_MINUTES = 1;
 const MAX_REMINDER_LEAD_MINUTES = 60;
 
@@ -136,6 +138,20 @@ export function saveSelectedCalendarIds(calendarIds: string[]): string[] {
   fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
   fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
   return settings.selectedCalendarIds;
+}
+
+export function getWellnessEnabled(): boolean {
+  const value = readSettings().wellnessEnabled;
+  return typeof value === 'boolean' ? value : DEFAULT_WELLNESS_ENABLED;
+}
+
+export function saveWellnessEnabled(enabled: boolean): boolean {
+  const settings = readSettings();
+  settings.wellnessEnabled = enabled;
+
+  fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
+  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
+  return settings.wellnessEnabled;
 }
 
 export function getStartupConfigured(): boolean {

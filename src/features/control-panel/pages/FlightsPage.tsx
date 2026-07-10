@@ -4,6 +4,7 @@ import { TopBar } from '../../../shared/ui/TopBar';
 export function FlightsPage({
   runtimeStatus,
   busy,
+  pendingAction,
   onPollNow,
   onTogglePaused,
   onClearHistory,
@@ -11,6 +12,7 @@ export function FlightsPage({
 }: {
   runtimeStatus: RuntimeStatus | null;
   busy: boolean;
+  pendingAction: string;
   onPollNow: () => Promise<void>;
   onTogglePaused: () => Promise<void>;
   onClearHistory: () => Promise<void>;
@@ -24,10 +26,10 @@ export function FlightsPage({
         rightSlot={
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => void onPollNow()} disabled={busy} className="action-pill">
-              Sync
+              {pendingAction === 'poll-now' ? 'Refreshing...' : 'Sync'}
             </button>
             <button type="button" onClick={() => void onTogglePaused()} disabled={busy} className="action-pill">
-              {runtimeStatus?.paused ? 'Resume' : 'Pause'}
+              {pendingAction === 'toggle-paused' ? 'Working...' : runtimeStatus?.paused ? 'Resume' : 'Pause'}
             </button>
           </div>
         }
@@ -67,8 +69,8 @@ export function FlightsPage({
                 {runtimeStatus.lastPollError}
               </div>
             ) : null}
-            <button type="button" onClick={() => void onShowDemo()} className="action-pill">
-              Run Preview
+            <button type="button" disabled={busy} onClick={() => void onShowDemo()} className="action-pill">
+              {busy && pendingAction === 'show-demo' ? 'Opening...' : 'Run Preview'}
             </button>
           </div>
         </section>
@@ -92,7 +94,7 @@ export function FlightsPage({
               disabled={busy || recentReminders.length === 0}
               className="action-pill"
             >
-              Clear History
+              {pendingAction === 'clear-history' ? 'Clearing...' : 'Clear History'}
             </button>
           </div>
 

@@ -1,4 +1,13 @@
 export type ArtifactId = 'ghost' | 'rocket' | 'train' | 'ufo' | 'minimal' | 'cat' | 'paper-plane' | 'santa';
+export type ThemeRuleKey =
+  | 'task'
+  | 'meeting-link'
+  | 'birthday'
+  | 'focus-time'
+  | 'water-break'
+  | 'eye-break'
+  | 'stand-break'
+  | 'morning-briefing';
 
 export interface ReminderPayload {
   reminderId: string;
@@ -6,6 +15,14 @@ export interface ReminderPayload {
   subtitle: string;
   artifactId: ArtifactId;
   meetingUrl?: string;
+}
+
+export interface ThemeRuleAssignment {
+  key: string;
+  label: string;
+  artifactId: ArtifactId;
+  matchText?: string;
+  builtin?: boolean;
 }
 
 export interface ReminderDeliverySummary extends ReminderPayload {
@@ -40,6 +57,7 @@ export interface CalendarEventSummary {
   calendarSummary: string;
   summary: string;
   startAt: string;
+  dueAt?: string;
   meetingUrl?: string;
   sourceUrl?: string;
   kind: 'event' | 'task';
@@ -59,6 +77,7 @@ export interface RuntimeStatus {
   startupSupported: boolean;
   pollerRunning: boolean;
   paused: boolean;
+  wellnessEnabled: boolean;
   reminderLeadMinutes: number;
   reminderLeadTimes: number[];
   lastPollAt: number | null;

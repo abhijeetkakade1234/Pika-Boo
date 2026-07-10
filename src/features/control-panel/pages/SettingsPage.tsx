@@ -8,6 +8,7 @@ export function SettingsPage({
   authStatus,
   runtimeStatus,
   busy,
+  pendingAction,
   error,
   setConfig,
   onSaveConfig,
@@ -16,6 +17,7 @@ export function SettingsPage({
   onDisconnectGoogle,
   onToggleStartup,
   onTogglePaused,
+  onToggleWellness,
   onPollNow,
   onSaveSelectedCalendars,
 }: {
@@ -23,6 +25,7 @@ export function SettingsPage({
   authStatus: AuthStatus | null;
   runtimeStatus: RuntimeStatus | null;
   busy: boolean;
+  pendingAction: string;
   error: string;
   setConfig: Dispatch<SetStateAction<GoogleOAuthConfig>>;
   onSaveConfig: () => Promise<void>;
@@ -31,6 +34,7 @@ export function SettingsPage({
   onDisconnectGoogle: () => Promise<void>;
   onToggleStartup: () => Promise<void>;
   onTogglePaused: () => Promise<void>;
+  onToggleWellness: () => Promise<void>;
   onPollNow: () => Promise<void>;
   onSaveSelectedCalendars: (calendarIds: string[]) => Promise<void>;
 }) {
@@ -86,10 +90,10 @@ export function SettingsPage({
               onClick={() => void onSaveConfig()}
               className="action-pill bg-primary text-white hover:bg-primary/90"
             >
-              Save Config
+              {pendingAction === 'save-config' ? 'Saving...' : 'Save Config'}
             </button>
             <button type="button" disabled={busy} onClick={() => void onImportGoogleConfig()} className="action-pill">
-              Import JSON
+              {pendingAction === 'import-google-config' ? 'Importing...' : 'Import JSON'}
             </button>
             <button
               type="button"
@@ -97,7 +101,7 @@ export function SettingsPage({
               onClick={() => void onConnectGoogle()}
               className="action-pill"
             >
-              Connect
+              {pendingAction === 'connect-google' ? 'Connecting...' : 'Connect'}
             </button>
             <button
               type="button"
@@ -105,7 +109,7 @@ export function SettingsPage({
               onClick={() => void onDisconnectGoogle()}
               className="action-pill"
             >
-              Disconnect
+              {pendingAction === 'disconnect-google' ? 'Disconnecting...' : 'Disconnect'}
             </button>
           </div>
 
@@ -195,7 +199,9 @@ export function SettingsPage({
               className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
             >
               <div className="font-body-md font-bold text-sidebar-charcoal">Poll Calendar</div>
-              <div className="mt-1 text-xs text-sidebar-charcoal/60">Manual sync now</div>
+              <div className="mt-1 text-xs text-sidebar-charcoal/60">
+                {pendingAction === 'poll-now' ? 'Refreshing now...' : 'Manual sync now'}
+              </div>
             </button>
             <button
               type="button"
@@ -204,9 +210,26 @@ export function SettingsPage({
               className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
             >
               <div className="font-body-md font-bold text-sidebar-charcoal">
-                {runtimeStatus?.paused ? 'Resume Reminders' : 'Pause Reminders'}
+                {pendingAction === 'toggle-paused' ? 'Working...' : runtimeStatus?.paused ? 'Resume Reminders' : 'Pause Reminders'}
               </div>
               <div className="mt-1 text-xs text-sidebar-charcoal/60">Background reminder engine</div>
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void onToggleWellness()}
+              className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
+            >
+              <div className="font-body-md font-bold text-sidebar-charcoal">
+                {pendingAction === 'toggle-wellness'
+                  ? 'Working...'
+                  : runtimeStatus?.wellnessEnabled
+                    ? 'Disable Wellness Reminders'
+                    : 'Enable Wellness Reminders'}
+              </div>
+              <div className="mt-1 text-xs text-sidebar-charcoal/60">
+                Eye, stand, and water nudges through the workday
+              </div>
             </button>
             <button
               type="button"
@@ -215,16 +238,27 @@ export function SettingsPage({
               className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
             >
               <div className="font-body-md font-bold text-sidebar-charcoal">
-                {runtimeStatus?.startupEnabled ? 'Disable Startup' : 'Enable Startup'}
+                {pendingAction === 'toggle-startup'
+                  ? 'Working...'
+                  : runtimeStatus?.startupEnabled
+                    ? 'Disable Startup'
+                    : 'Enable Startup'}
               </div>
               <div className="mt-1 text-xs text-sidebar-charcoal/60">Packaged app only</div>
             </button>
             <div className="rounded-[24px] bg-white/60 p-5">
               <div className="font-label-caps text-label-caps uppercase text-sidebar-charcoal/60">Reminder Cadence</div>
               <div className="mt-3 text-lg font-semibold text-sidebar-charcoal">
-                {(runtimeStatus?.reminderLeadTimes ?? [30, 5, 1]).join('m • ')}m
+                {(runtimeStatus?.reminderLeadTimes ?? [30, 5, 1]).join(' / ')}m
               </div>
               <div className="mt-2 text-xs text-sidebar-charcoal/60">Morning briefing at 8:00 AM, then 30m, 5m, and 1m before each moment.</div>
+            </div>
+            <div className="rounded-[24px] bg-white/60 p-5">
+              <div className="font-label-caps text-label-caps uppercase text-sidebar-charcoal/60">Wellness Cadence</div>
+              <div className="mt-3 text-lg font-semibold text-sidebar-charcoal">Eyes 20m / Stand 30m / Water 60m</div>
+              <div className="mt-2 text-xs text-sidebar-charcoal/60">
+                {runtimeStatus?.wellnessEnabled ? 'Enabled for work hours.' : 'Disabled until you turn it back on.'}
+              </div>
             </div>
           </div>
 

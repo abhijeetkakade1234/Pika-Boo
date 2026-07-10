@@ -8,29 +8,41 @@ import type { AuthStatus, GoogleOAuthConfig, OAuthImportResult, RuntimeStatus } 
 import { beginGoogleOAuth, clearGoogleTokens, getAuthStatus } from './services/googleAuth';
 import {
   clearReminderHistory,
+  createCustomThemeRule,
   clearSnoozedReminder,
+  deleteCustomThemeRule,
   listEventTimeline,
   listRecentReminders,
   listSnoozedReminders,
   recordReminderDelivery,
+  saveThemeRuleOverride,
   saveSnoozedReminder,
   upsertSeenEvents,
 } from './services/historyDb';
 import { CalendarPoller, EVENT_REMINDER_LEAD_TIMES } from './services/poller';
+import { listThemeRules } from './services/reminderArtifacts';
 import {
   getArtifactId,
   getGoogleOAuthConfig,
   getGoogleOAuthConfigForUi,
+  getWellnessEnabled,
   parseGoogleOAuthDesktopClient,
   saveArtifactId,
   saveGoogleOAuthConfig,
   saveSelectedCalendarIds,
+  saveWellnessEnabled,
 } from './services/settingsStore';
 import { ensureStartupEnabledByDefault, getStartupEnabled, isStartupSupported, setStartupEnabled } from './services/startup';
-import { WellnessScheduler } from './services/wellnessScheduler';
+import {
+  EYE_BREAK_INTERVAL_MINUTES,
+  STAND_BREAK_INTERVAL_MINUTES,
+  WATER_BREAK_INTERVAL_MINUTES,
+  WellnessScheduler,
+} from './services/wellnessScheduler';
 
 const isDev = Boolean(process.env.VITE_DEV_SERVER_URL);
 const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BOO_SMOKE_TEST === '1';
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -141,7 +153,11 @@ function showOverlay(payload: ReminderPayload): void {
   }
 
   currentReminder = payload;
-  recordReminderDelivery(payload);
+  try {
+    recordReminderDelivery(payload);
+  } catch (error) {
+    console.warn('Failed to record reminder delivery', error);
+  }
   overlayWindow.showInactive();
   overlayWindow.webContents.send('overlay:show', payload);
 
@@ -180,9 +196,14 @@ function restoreSnoozedReminders(): void {
   }
 }
 
+function syncWellnessScheduler(paused = poller.getStatus(getStartupEnabled(), isStartupSupported()).paused): void {
+  wellnessScheduler.setPaused(paused || !getWellnessEnabled());
+}
+
 function buildRuntimeStatus(): RuntimeStatus {
   return {
     ...poller.getStatus(getStartupEnabled(), isStartupSupported()),
+    wellnessEnabled: getWellnessEnabled(),
     startupSupported: isStartupSupported(),
     currentReminder,
     recentReminders: listRecentReminders(50),
@@ -258,13 +279,25 @@ function refreshTrayMenu(): void {
         checked: runtime.paused,
         click: () => {
           poller.setPaused(!runtime.paused);
+          syncWellnessScheduler(!runtime.paused);
           refreshTrayMenu();
           mainWindow?.webContents.send('runtime:updated');
         },
       },
-      { label: `Reminder cadence: ${EVENT_REMINDER_LEAD_TIMES.join('m • ')}m` },
+      { label: `Reminder cadence: ${EVENT_REMINDER_LEAD_TIMES.join(' / ')}m` },
       { label: 'Morning briefing: 8:00 AM' },
-      { label: 'Wellness: eyes 50m | water 90m' },
+      {
+        label: 'Wellness reminders',
+        type: 'checkbox',
+        checked: getWellnessEnabled(),
+        click: () => {
+          saveWellnessEnabled(!getWellnessEnabled());
+          syncWellnessScheduler(runtime.paused);
+          refreshTrayMenu();
+          mainWindow?.webContents.send('runtime:updated');
+        },
+      },
+      { label: `Wellness cadence: eyes ${EYE_BREAK_INTERVAL_MINUTES}m / stand ${STAND_BREAK_INTERVAL_MINUTES}m / water ${WATER_BREAK_INTERVAL_MINUTES}m` },
       {
         label: 'Launch on Windows login',
         type: 'checkbox',
@@ -384,6 +417,31 @@ function wireIpc(): void {
     };
   });
 
+  ipcMain.handle('artifact:get-theme-rules', () => {
+    return listThemeRules();
+  });
+
+  ipcMain.handle('artifact:set-theme-rule', (_event, key: string, artifactId: ArtifactId) => {
+    saveThemeRuleOverride(key as Parameters<typeof saveThemeRuleOverride>[0], artifactId);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return listThemeRules();
+  });
+
+  ipcMain.handle('artifact:add-theme-rule', (_event, label: string, matchText: string, artifactId: ArtifactId) => {
+    createCustomThemeRule(label, matchText, artifactId);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return listThemeRules();
+  });
+
+  ipcMain.handle('artifact:delete-theme-rule', (_event, key: string) => {
+    deleteCustomThemeRule(key);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return listThemeRules();
+  });
+
   ipcMain.handle('auth:connect', async (): Promise<AuthStatus> => {
     const config = getGoogleOAuthConfig();
 
@@ -427,7 +485,15 @@ function wireIpc(): void {
 
   ipcMain.handle('runtime:set-paused', (_event, paused: boolean): RuntimeStatus => {
     poller.setPaused(paused);
-    wellnessScheduler.setPaused(paused);
+    syncWellnessScheduler(paused);
+    refreshTrayMenu();
+    mainWindow?.webContents.send('runtime:updated');
+    return buildRuntimeStatus();
+  });
+
+  ipcMain.handle('runtime:set-wellness-enabled', (_event, enabled: boolean): RuntimeStatus => {
+    saveWellnessEnabled(enabled);
+    syncWellnessScheduler();
     refreshTrayMenu();
     mainWindow?.webContents.send('runtime:updated');
     return buildRuntimeStatus();
@@ -459,7 +525,7 @@ async function bootstrap(): Promise<void> {
   wireIpc();
   restoreSnoozedReminders();
   poller.start();
-  wellnessScheduler.start();
+  syncWellnessScheduler(false);
 
   if (isSmokeTest) {
     mainWindow.hide();
@@ -500,7 +566,24 @@ declare global {
   }
 }
 
-bootstrap().catch((error) => {
-  console.error('Failed to start Pika-Boo', error);
+if (!gotSingleInstanceLock) {
   app.quit();
-});
+} else {
+  app.on('second-instance', () => {
+    if (!mainWindow) {
+      return;
+    }
+
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+
+    mainWindow.show();
+    mainWindow.focus();
+  });
+
+  bootstrap().catch((error) => {
+    console.error('Failed to start Pika-Boo', error);
+    app.quit();
+  });
+}

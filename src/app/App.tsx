@@ -50,6 +50,8 @@ function ControlPanelEntry() {
           <MissionControlPage
             authStatus={desktop.authStatus}
             runtimeStatus={desktop.runtimeStatus}
+            busy={desktop.busy}
+            pendingAction={desktop.pendingAction}
             onNavigate={setActiveScreen}
             onConnectGoogle={desktop.authStatus?.configured ? desktop.connectGoogle : goToSettingsIfNeeded}
             onClearHistory={desktop.clearReminderHistory}
@@ -63,6 +65,7 @@ function ControlPanelEntry() {
           <MomentsPage
             runtimeStatus={desktop.runtimeStatus}
             busy={desktop.busy}
+            pendingAction={desktop.pendingAction}
             onPollNow={desktop.pollNow}
             onOpenSettings={() => setActiveScreen('settings')}
           />
@@ -72,6 +75,7 @@ function ControlPanelEntry() {
           <FlightsPage
             runtimeStatus={desktop.runtimeStatus}
             busy={desktop.busy}
+            pendingAction={desktop.pendingAction}
             onPollNow={desktop.pollNow}
             onTogglePaused={desktop.togglePaused}
             onClearHistory={desktop.clearReminderHistory}
@@ -83,7 +87,13 @@ function ControlPanelEntry() {
           <ThemesPage
             artifactId={desktop.artifactId}
             runtimeStatus={desktop.runtimeStatus}
+            themeRules={desktop.themeRules}
+            busy={desktop.busy}
+            pendingAction={desktop.pendingAction}
             onSelectArtifact={desktop.saveArtifact}
+            onSaveThemeRule={desktop.saveThemeRule}
+            onAddThemeRule={desktop.addThemeRule}
+            onDeleteThemeRule={desktop.deleteThemeRule}
             onShowDemo={() => window.pikaBoo.showOverlayDemo()}
           />
         );
@@ -94,6 +104,7 @@ function ControlPanelEntry() {
             authStatus={desktop.authStatus}
             runtimeStatus={desktop.runtimeStatus}
             busy={desktop.busy}
+            pendingAction={desktop.pendingAction}
             error={desktop.error}
             setConfig={desktop.setConfig}
             onSaveConfig={desktop.saveConfig}
@@ -102,6 +113,7 @@ function ControlPanelEntry() {
             onDisconnectGoogle={desktop.disconnectGoogle}
             onToggleStartup={desktop.toggleStartup}
             onTogglePaused={desktop.togglePaused}
+            onToggleWellness={desktop.toggleWellness}
             onPollNow={desktop.pollNow}
             onSaveSelectedCalendars={desktop.saveSelectedCalendars}
           />
