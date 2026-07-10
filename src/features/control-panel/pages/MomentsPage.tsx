@@ -17,11 +17,13 @@ function getMomentBadge(event: RuntimeStatus['upcomingEvents'][number]): string 
 export function MomentsPage({
   runtimeStatus,
   busy,
+  pendingAction,
   onPollNow,
   onOpenSettings,
 }: {
   runtimeStatus: RuntimeStatus | null;
   busy: boolean;
+  pendingAction: string;
   onPollNow: () => Promise<void>;
   onOpenSettings: () => void;
 }) {
@@ -37,7 +39,7 @@ export function MomentsPage({
         rightSlot={
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => void onPollNow()} disabled={busy} className="action-pill">
-              Refresh
+              {pendingAction === 'poll-now' ? 'Refreshing...' : 'Refresh'}
             </button>
             <button type="button" onClick={onOpenSettings} className="action-pill">
               Calendars
@@ -100,7 +102,9 @@ export function MomentsPage({
                     </div>
                   </div>
                   <div className="min-w-0 flex flex-wrap items-center gap-3">
-                    <div className="text-sm text-sidebar-charcoal/70">{formatEventDate(task.startAt)}</div>
+                    <div className="text-sm text-sidebar-charcoal/70">
+                      {task.dueAt ? formatEventDate(task.dueAt) : 'No due date'}
+                    </div>
                     {task.sourceUrl ? (
                       <button type="button" onClick={() => void window.pikaBoo.openExternal(task.sourceUrl!)} className="action-pill">
                         Open in Google

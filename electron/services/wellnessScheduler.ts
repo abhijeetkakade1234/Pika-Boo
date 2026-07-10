@@ -3,8 +3,9 @@ import { getArtifactForNamedReminder } from './reminderArtifacts';
 
 const DAY_START_HOUR = 9;
 const DAY_END_HOUR = 19;
-const EYE_BREAK_INTERVAL_MINUTES = 50;
-const WATER_BREAK_INTERVAL_MINUTES = 90;
+export const EYE_BREAK_INTERVAL_MINUTES = 20;
+export const STAND_BREAK_INTERVAL_MINUTES = 30;
+export const WATER_BREAK_INTERVAL_MINUTES = 60;
 
 type ReminderHandler = (payload: ReminderPayload) => void;
 
@@ -33,12 +34,14 @@ function nextSlotTime(anchorHour: number, intervalMinutes: number, now: Date): D
 export class WellnessScheduler {
   private paused = false;
   private eyeTimer: NodeJS.Timeout | null = null;
+  private standTimer: NodeJS.Timeout | null = null;
   private waterTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly onReminder: ReminderHandler) {}
 
   start(): void {
     this.scheduleEyeBreak();
+    this.scheduleStandBreak();
     this.scheduleWaterBreak();
   }
 
@@ -67,10 +70,29 @@ export class WellnessScheduler {
       this.onReminder({
         reminderId: `eye-break:${next.toISOString()}`,
         title: 'Relax your eyes',
-        subtitle: 'Look away for 20 seconds and let your eyes reset.',
-        artifactId: getArtifactForNamedReminder('relax your eyes', 'ghost'),
+        subtitle: '20-20-20: look 20 feet away for 20 seconds.',
+        artifactId: getArtifactForNamedReminder('eye-break', 'ghost'),
       });
       this.scheduleEyeBreak();
+    }, Math.max(1_000, next.getTime() - now.getTime()));
+  }
+
+  private scheduleStandBreak(): void {
+    const now = new Date();
+    const next = nextSlotTime(DAY_START_HOUR, STAND_BREAK_INTERVAL_MINUTES, now);
+    this.standTimer = setTimeout(() => {
+      this.standTimer = null;
+      if (this.paused) {
+        return;
+      }
+
+      this.onReminder({
+        reminderId: `stand-break:${next.toISOString()}`,
+        title: 'Stand up for a minute',
+        subtitle: 'Stand, stretch, or walk for 1 to 2 minutes.',
+        artifactId: getArtifactForNamedReminder('stand-break', 'cat'),
+      });
+      this.scheduleStandBreak();
     }, Math.max(1_000, next.getTime() - now.getTime()));
   }
 
@@ -86,8 +108,8 @@ export class WellnessScheduler {
       this.onReminder({
         reminderId: `water-break:${next.toISOString()}`,
         title: 'Water break',
-        subtitle: 'Take a sip and reset before the next stretch.',
-        artifactId: getArtifactForNamedReminder('water break', 'ufo'),
+        subtitle: 'Take a few sips and reset before the next push.',
+        artifactId: getArtifactForNamedReminder('water-break', 'ufo'),
       });
       this.scheduleWaterBreak();
     }, Math.max(1_000, next.getTime() - now.getTime()));
@@ -97,6 +119,11 @@ export class WellnessScheduler {
     if (this.eyeTimer) {
       clearTimeout(this.eyeTimer);
       this.eyeTimer = null;
+    }
+
+    if (this.standTimer) {
+      clearTimeout(this.standTimer);
+      this.standTimer = null;
     }
 
     if (this.waterTimer) {

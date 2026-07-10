@@ -33,16 +33,19 @@ function copyEntry(name) {
   fs.cpSync(source, destination, { recursive: true, force: true });
 }
 
-resetDir(tempOutput);
-fs.mkdirSync(releaseDir, { recursive: true });
+try {
+  resetDir(tempOutput);
+  fs.mkdirSync(releaseDir, { recursive: true });
 
-run('npx', ['electron-builder', '--win', target, `--config.directories.output=${tempOutput}`]);
+  run('npx', ['electron-builder', '--win', target, `--config.directories.output=${tempOutput}`]);
 
-if (target === 'dir') {
-  copyEntry('win-unpacked');
-} else {
-  for (const name of fs.readdirSync(tempOutput)) {
-    copyEntry(name);
+  if (target === 'dir') {
+    copyEntry('win-unpacked');
+  } else {
+    for (const name of fs.readdirSync(tempOutput)) {
+      copyEntry(name);
+    }
   }
+} finally {
+  fs.rmSync(tempOutput, { recursive: true, force: true });
 }
-

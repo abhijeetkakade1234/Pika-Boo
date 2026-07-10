@@ -47,6 +47,8 @@ function describeMomentKind(event: RuntimeStatus['upcomingEvents'][number] | und
 export function MissionControlPage({
   authStatus,
   runtimeStatus,
+  busy,
+  pendingAction,
   onNavigate,
   onConnectGoogle,
   onClearHistory,
@@ -56,6 +58,8 @@ export function MissionControlPage({
 }: {
   authStatus: AuthStatus | null;
   runtimeStatus: RuntimeStatus | null;
+  busy: boolean;
+  pendingAction: string;
   onNavigate: (screen: ControlScreen) => void;
   onConnectGoogle: () => Promise<void>;
   onClearHistory: () => Promise<void>;
@@ -81,18 +85,20 @@ export function MissionControlPage({
           <div className="flex flex-wrap justify-end gap-3">
             <button
               type="button"
+              disabled={busy}
               onClick={() => void onPollNow()}
               className="flex h-12 items-center justify-center rounded-full border border-white/50 bg-white/40 px-4 font-label-caps text-label-caps uppercase shadow-sm backdrop-blur-md transition-all hover:scale-105 hover:bg-white active:scale-95 sm:px-5"
             >
-              Poll Now
+              {pendingAction === 'poll-now' ? 'Refreshing...' : 'Poll Now'}
             </button>
             <button
               type="button"
+              disabled={busy}
               onClick={() => void onTogglePaused()}
               className="group flex items-center gap-3 rounded-full bg-sidebar-charcoal px-4 py-3 text-white shadow-lg transition-all hover:scale-105 hover:bg-black active:scale-95 sm:px-6"
             >
               <span className="font-label-caps text-label-caps uppercase tracking-widest">
-                {runtimeStatus?.paused ? 'Resume' : 'Pause'}
+                {pendingAction === 'toggle-paused' ? 'Working...' : runtimeStatus?.paused ? 'Resume' : 'Pause'}
               </span>
               <span className="material-symbols-outlined text-flamingo-pink">
                 {runtimeStatus?.paused ? 'play_arrow' : 'pause'}
@@ -272,7 +278,9 @@ export function MissionControlPage({
                   <div className="text-card-title font-body-md font-bold text-sidebar-charcoal">{task.summary}</div>
                   <div className="text-card-copy mt-1 text-sm text-sidebar-charcoal/60">{task.calendarSummary}</div>
                   <div className="text-card-copy mt-2 text-xs uppercase tracking-widest text-sidebar-charcoal/50">
-                    Due {new Date(task.startAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    {task.dueAt
+                      ? `Due ${new Date(task.dueAt).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+                      : 'No due date'}
                   </div>
                   {task.sourceUrl ? (
                     <button type="button" onClick={() => void window.pikaBoo.openExternal(task.sourceUrl!)} className="mt-3 action-pill">
@@ -293,8 +301,8 @@ export function MissionControlPage({
           <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="font-headline-lg text-headline-lg text-sidebar-charcoal">Recent Reminder Flights</h3>
             <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => void onClearHistory()} className="action-pill">
-                Clear History
+              <button type="button" disabled={busy} onClick={() => void onClearHistory()} className="action-pill">
+                {pendingAction === 'clear-history' ? 'Clearing...' : 'Clear History'}
               </button>
               <button
                 type="button"
@@ -371,10 +379,15 @@ export function MissionControlPage({
             </p>
             <button
               type="button"
+              disabled={busy}
               onClick={() => void onConnectGoogle()}
               className="mt-6 action-pill bg-sidebar-charcoal/10 hover:bg-sidebar-charcoal/20"
             >
-              {authStatus?.connected ? 'Reconnect' : 'Connect'}
+              {pendingAction === 'connect-google'
+                ? 'Connecting...'
+                : authStatus?.connected
+                  ? 'Reconnect'
+                  : 'Connect'}
             </button>
           </div>
 

@@ -1,14 +1,27 @@
 import { app } from 'electron';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
-import type {
-  CalendarEventSummary,
-  CalendarEventTimelineEntry,
-  ReminderDeliverySummary,
-  ReminderPayload,
-} from '../../src/shared/contracts';
+import type { CalendarEventSummary, CalendarEventTimelineEntry, ReminderDeliverySummary, ReminderPayload, ThemeRuleKey, ArtifactId, ThemeRuleAssignment } from '../../src/shared/contracts';
 
 let db: DatabaseSync | null = null;
+
+function ensureThemeRuleColumns(database: DatabaseSync): void {
+  const columns = new Set(
+    (database.prepare('PRAGMA table_info(theme_rules)').all() as Array<Record<string, unknown>>).map((row) => String(row.name)),
+  );
+
+  if (!columns.has('rule_label')) {
+    database.exec('ALTER TABLE theme_rules ADD COLUMN rule_label TEXT');
+  }
+
+  if (!columns.has('match_text')) {
+    database.exec('ALTER TABLE theme_rules ADD COLUMN match_text TEXT');
+  }
+
+  if (!columns.has('builtin')) {
+    database.exec('ALTER TABLE theme_rules ADD COLUMN builtin INTEGER NOT NULL DEFAULT 1');
+  }
+}
 
 function getDb(): DatabaseSync {
   if (db) {
@@ -16,6 +29,11 @@ function getDb(): DatabaseSync {
   }
 
   db = new DatabaseSync(path.join(app.getPath('userData'), 'pikaboo.sqlite'));
+  db.exec(`
+    PRAGMA journal_mode = WAL;
+    PRAGMA busy_timeout = 5000;
+    PRAGMA synchronous = NORMAL;
+  `);
   db.exec(`
     CREATE TABLE IF NOT EXISTS reminder_history (
       reminder_id TEXT PRIMARY KEY,
@@ -46,6 +64,11 @@ function getDb(): DatabaseSync {
       wake_at INTEGER NOT NULL
     ) STRICT;
 
+    CREATE TABLE IF NOT EXISTS theme_rules (
+      rule_key TEXT PRIMARY KEY,
+      artifact_id TEXT NOT NULL
+    ) STRICT;
+
     CREATE INDEX IF NOT EXISTS idx_reminder_history_delivered_at
       ON reminder_history(delivered_at DESC);
 
@@ -55,6 +78,7 @@ function getDb(): DatabaseSync {
     CREATE INDEX IF NOT EXISTS idx_snoozed_reminders_wake_at
       ON snoozed_reminders(wake_at ASC);
   `);
+  ensureThemeRuleColumns(db);
 
   return db;
 }
@@ -125,6 +149,65 @@ export function saveSnoozedReminder(reminder: ReminderPayload, wakeAt: number): 
 export function clearSnoozedReminder(reminderId: string): void {
   const database = getDb();
   database.prepare('DELETE FROM snoozed_reminders WHERE reminder_id = ?').run(reminderId);
+}
+
+export function listThemeRulesFromDb(): ThemeRuleAssignment[] {
+  const database = getDb();
+  return (database
+    .prepare(`
+      SELECT
+        rule_key AS ruleKey,
+        artifact_id AS artifactId,
+        rule_label AS ruleLabel,
+        match_text AS matchText,
+        builtin
+      FROM theme_rules
+      ORDER BY rule_key ASC
+    `)
+    .all() as Array<Record<string, unknown>>).map((row) => ({
+      key: String(row.ruleKey) as ThemeRuleKey,
+      label: row.ruleLabel ? String(row.ruleLabel) : String(row.ruleKey),
+      artifactId: String(row.artifactId) as ArtifactId,
+      matchText: row.matchText ? String(row.matchText) : undefined,
+      builtin: Number(row.builtin ?? 1) === 1,
+    }));
+}
+
+export function saveThemeRuleOverride(key: ThemeRuleKey, artifactId: ArtifactId): void {
+  const database = getDb();
+  database
+    .prepare(`
+      INSERT INTO theme_rules (
+        rule_key,
+        artifact_id,
+        builtin
+      ) VALUES (?, ?, 1)
+      ON CONFLICT(rule_key) DO UPDATE SET
+        artifact_id = excluded.artifact_id,
+        builtin = 1
+    `)
+    .run(key, artifactId);
+}
+
+export function createCustomThemeRule(label: string, matchText: string, artifactId: ArtifactId): void {
+  const database = getDb();
+  const key = `custom:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+  database
+    .prepare(`
+      INSERT INTO theme_rules (
+        rule_key,
+        artifact_id,
+        rule_label,
+        match_text,
+        builtin
+      ) VALUES (?, ?, ?, ?, 0)
+    `)
+    .run(key, artifactId, label, matchText.toLowerCase());
+}
+
+export function deleteCustomThemeRule(key: string): void {
+  const database = getDb();
+  database.prepare('DELETE FROM theme_rules WHERE rule_key = ? AND builtin = 0').run(key);
 }
 
 export function listSnoozedReminders(): Array<ReminderPayload & { wakeAt: number }> {

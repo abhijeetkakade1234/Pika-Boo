@@ -82,6 +82,7 @@ interface GoogleTask {
   id: string;
   title?: string;
   due?: string;
+  updated?: string;
   status?: 'completed' | 'needsAction';
   deleted?: boolean;
   hidden?: boolean;
@@ -99,6 +100,24 @@ function toLocalAnchorIso(dateText: string, hour: number): string {
   const [year, month, day] = dateText.split('-').map(Number);
   const anchored = new Date(year, (month ?? 1) - 1, day ?? 1, hour, 0, 0, 0);
   return anchored.toISOString();
+}
+
+function anchorTaskTimestamp(task: GoogleTask): { startAt: string; dueAt?: string } | null {
+  if (task.due) {
+    return {
+      startAt: toLocalAnchorIso(task.due.slice(0, 10), 9),
+      dueAt: task.due,
+    };
+  }
+
+  if (task.updated) {
+    return {
+      startAt: task.updated,
+      dueAt: undefined,
+    };
+  }
+
+  return null;
 }
 
 function getTokenPath(): string {
@@ -479,7 +498,12 @@ export async function listUpcomingEvents(
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
       .flatMap(({ taskList, payload }) =>
         (payload.items ?? []).map((task): CalendarEventSummary | null => {
-          if (!task.id || !task.due || task.status === 'completed' || task.deleted || task.hidden) {
+          if (!task.id || task.status === 'completed' || task.deleted || task.hidden) {
+            return null;
+          }
+
+          const timing = anchorTaskTimestamp(task);
+          if (!timing) {
             return null;
           }
 
@@ -488,7 +512,8 @@ export async function listUpcomingEvents(
             calendarId: `tasks:${taskList.id}`,
             calendarSummary: taskList.title?.trim() ? `Tasks | ${taskList.title.trim()}` : 'Tasks',
             summary: task.title?.trim() || 'Untitled task',
-            startAt: toLocalAnchorIso(task.due.slice(0, 10), 9),
+            startAt: timing.startAt,
+            dueAt: timing.dueAt,
             sourceUrl: task.assignmentInfo?.linkToTask ?? task.webViewLink,
             kind: 'task',
             label: 'Task',
