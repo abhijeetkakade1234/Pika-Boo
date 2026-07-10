@@ -98,7 +98,7 @@ export function FlightsPage({
             </button>
           </div>
 
-          <div className="mt-8 space-y-4">
+          <div className="mt-8 max-h-[620px] space-y-4 overflow-y-auto overflow-x-hidden pr-2">
             {recentReminders.length > 0 ? (
               recentReminders.map((reminder) => (
                 <div key={`${reminder.reminderId}:${reminder.deliveredAt}`} className="rounded-[24px] bg-surface-container p-5">

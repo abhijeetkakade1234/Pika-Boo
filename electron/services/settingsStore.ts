@@ -2,6 +2,7 @@ import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ArtifactId, GoogleOAuthConfig } from '../../src/shared/contracts';
+import { getAppSettingValue, setAppSettingValue } from './historyDb';
 
 interface AppSettings {
   googleOAuth?: GoogleOAuthConfig;
@@ -9,6 +10,10 @@ interface AppSettings {
   reminderLeadMinutes?: number;
   selectedCalendarIds?: string[];
   wellnessEnabled?: boolean;
+  eyeBreakEnabled?: boolean;
+  standBreakEnabled?: boolean;
+  waterBreakEnabled?: boolean;
+  timeAwarenessEnabled?: boolean;
   startupConfigured?: boolean;
   lastMorningBriefingDate?: string;
 }
@@ -16,8 +21,17 @@ interface AppSettings {
 const DEFAULT_ARTIFACT_ID: ArtifactId = 'ghost';
 const DEFAULT_REMINDER_LEAD_MINUTES = 5;
 const DEFAULT_WELLNESS_ENABLED = true;
+const DEFAULT_EYE_BREAK_ENABLED = true;
+const DEFAULT_STAND_BREAK_ENABLED = true;
+const DEFAULT_WATER_BREAK_ENABLED = true;
+const DEFAULT_TIME_AWARENESS_ENABLED = false;
 const MIN_REMINDER_LEAD_MINUTES = 1;
 const MAX_REMINDER_LEAD_MINUTES = 60;
+const WELLNESS_ENABLED_KEY = 'wellnessEnabled';
+const EYE_BREAK_ENABLED_KEY = 'eyeBreakEnabled';
+const STAND_BREAK_ENABLED_KEY = 'standBreakEnabled';
+const WATER_BREAK_ENABLED_KEY = 'waterBreakEnabled';
+const TIME_AWARENESS_ENABLED_KEY = 'timeAwarenessEnabled';
 
 function getSettingsPath(): string {
   return path.join(app.getPath('userData'), 'settings.json');
@@ -141,17 +155,78 @@ export function saveSelectedCalendarIds(calendarIds: string[]): string[] {
 }
 
 export function getWellnessEnabled(): boolean {
+  const stored = getAppSettingValue(WELLNESS_ENABLED_KEY);
+  if (stored === '1' || stored === '0') {
+    return stored === '1';
+  }
+
   const value = readSettings().wellnessEnabled;
   return typeof value === 'boolean' ? value : DEFAULT_WELLNESS_ENABLED;
 }
 
 export function saveWellnessEnabled(enabled: boolean): boolean {
-  const settings = readSettings();
-  settings.wellnessEnabled = enabled;
+  setAppSettingValue(WELLNESS_ENABLED_KEY, enabled ? '1' : '0');
+  return enabled;
+}
 
-  fs.mkdirSync(path.dirname(getSettingsPath()), { recursive: true });
-  fs.writeFileSync(getSettingsPath(), JSON.stringify(settings, null, 2), 'utf8');
-  return settings.wellnessEnabled;
+export function getEyeBreakEnabled(): boolean {
+  const stored = getAppSettingValue(EYE_BREAK_ENABLED_KEY);
+  if (stored === '1' || stored === '0') {
+    return stored === '1';
+  }
+
+  const value = readSettings().eyeBreakEnabled;
+  return typeof value === 'boolean' ? value : DEFAULT_EYE_BREAK_ENABLED;
+}
+
+export function saveEyeBreakEnabled(enabled: boolean): boolean {
+  setAppSettingValue(EYE_BREAK_ENABLED_KEY, enabled ? '1' : '0');
+  return enabled;
+}
+
+export function getStandBreakEnabled(): boolean {
+  const stored = getAppSettingValue(STAND_BREAK_ENABLED_KEY);
+  if (stored === '1' || stored === '0') {
+    return stored === '1';
+  }
+
+  const value = readSettings().standBreakEnabled;
+  return typeof value === 'boolean' ? value : DEFAULT_STAND_BREAK_ENABLED;
+}
+
+export function saveStandBreakEnabled(enabled: boolean): boolean {
+  setAppSettingValue(STAND_BREAK_ENABLED_KEY, enabled ? '1' : '0');
+  return enabled;
+}
+
+export function getWaterBreakEnabled(): boolean {
+  const stored = getAppSettingValue(WATER_BREAK_ENABLED_KEY);
+  if (stored === '1' || stored === '0') {
+    return stored === '1';
+  }
+
+  const value = readSettings().waterBreakEnabled;
+  return typeof value === 'boolean' ? value : DEFAULT_WATER_BREAK_ENABLED;
+}
+
+export function saveWaterBreakEnabled(enabled: boolean): boolean {
+  setAppSettingValue(WATER_BREAK_ENABLED_KEY, enabled ? '1' : '0');
+  return enabled;
+}
+
+export function getTimeAwarenessEnabled(): boolean {
+  const stored = getAppSettingValue(TIME_AWARENESS_ENABLED_KEY);
+  if (stored === '1' || stored === '0') {
+    return stored === '1';
+  }
+
+  const value = readSettings().timeAwarenessEnabled;
+  return typeof value === 'boolean' ? value : DEFAULT_TIME_AWARENESS_ENABLED;
+}
+
+export function saveTimeAwarenessEnabled(enabled: boolean): boolean {
+  setAppSettingValue(TIME_AWARENESS_ENABLED_KEY, enabled ? '1' : '0');
+  return enabled;
 }
 
 export function getStartupConfigured(): boolean {

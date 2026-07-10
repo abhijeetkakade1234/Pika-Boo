@@ -1,7 +1,73 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { artifactCatalog } from '../../../shared/data/artifacts';
 import type { AuthStatus, GoogleOAuthConfig, RuntimeStatus } from '../../../shared/contracts';
 import { TopBar } from '../../../shared/ui/TopBar';
+
+function ActionCard({
+  title,
+  description,
+  onClick,
+  disabled,
+}: {
+  title: string;
+  description: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <div className="font-body-md font-bold text-sidebar-charcoal">{title}</div>
+      <div className="mt-1 text-xs text-sidebar-charcoal/60">{description}</div>
+    </button>
+  );
+}
+
+function ToggleRow({
+  title,
+  description,
+  enabled,
+  onToggle,
+  disabled,
+  busyLabel,
+}: {
+  title: string;
+  description: string;
+  enabled: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+  busyLabel?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onToggle}
+      className="flex w-full items-center justify-between gap-4 rounded-[24px] bg-white/60 px-5 py-4 text-left transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <div className="min-w-0 flex-1">
+        <div className="font-body-md font-bold text-sidebar-charcoal">{title}</div>
+        <div className="mt-1 text-xs text-sidebar-charcoal/60">{description}</div>
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        <span className={`text-xs font-semibold uppercase tracking-widest ${enabled ? 'text-primary' : 'text-sidebar-charcoal/45'}`}>
+          {busyLabel ?? (enabled ? 'On' : 'Off')}
+        </span>
+        <span
+          className={`relative h-7 w-12 rounded-full transition ${enabled ? 'bg-primary' : 'bg-sidebar-charcoal/15'}`}
+          aria-hidden="true"
+        >
+          <span
+            className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${enabled ? 'left-6' : 'left-1'}`}
+          />
+        </span>
+      </div>
+    </button>
+  );
+}
 
 export function SettingsPage({
   config,
@@ -18,6 +84,8 @@ export function SettingsPage({
   onToggleStartup,
   onTogglePaused,
   onToggleWellness,
+  onToggleWellnessType,
+  onToggleTimeAwareness,
   onPollNow,
   onSaveSelectedCalendars,
 }: {
@@ -35,6 +103,8 @@ export function SettingsPage({
   onToggleStartup: () => Promise<void>;
   onTogglePaused: () => Promise<void>;
   onToggleWellness: () => Promise<void>;
+  onToggleWellnessType: (kind: 'eye' | 'stand' | 'water', enabled: boolean) => Promise<void>;
+  onToggleTimeAwareness: () => Promise<void>;
   onPollNow: () => Promise<void>;
   onSaveSelectedCalendars: (calendarIds: string[]) => Promise<void>;
 }) {
@@ -192,60 +262,28 @@ export function SettingsPage({
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              disabled={busy || runtimeStatus?.paused}
+            <ActionCard
+              title="Poll Calendar"
+              description={pendingAction === 'poll-now' ? 'Refreshing now...' : 'Manual sync now'}
               onClick={() => void onPollNow()}
-              className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
-            >
-              <div className="font-body-md font-bold text-sidebar-charcoal">Poll Calendar</div>
-              <div className="mt-1 text-xs text-sidebar-charcoal/60">
-                {pendingAction === 'poll-now' ? 'Refreshing now...' : 'Manual sync now'}
-              </div>
-            </button>
-            <button
-              type="button"
-              disabled={busy}
+              disabled={busy || runtimeStatus?.paused}
+            />
+            <ActionCard
+              title={pendingAction === 'toggle-paused' ? 'Working...' : runtimeStatus?.paused ? 'Resume Reminders' : 'Pause Reminders'}
+              description="Background reminder engine"
               onClick={() => void onTogglePaused()}
-              className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
-            >
-              <div className="font-body-md font-bold text-sidebar-charcoal">
-                {pendingAction === 'toggle-paused' ? 'Working...' : runtimeStatus?.paused ? 'Resume Reminders' : 'Pause Reminders'}
-              </div>
-              <div className="mt-1 text-xs text-sidebar-charcoal/60">Background reminder engine</div>
-            </button>
-            <button
-              type="button"
               disabled={busy}
-              onClick={() => void onToggleWellness()}
-              className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
-            >
-              <div className="font-body-md font-bold text-sidebar-charcoal">
-                {pendingAction === 'toggle-wellness'
-                  ? 'Working...'
-                  : runtimeStatus?.wellnessEnabled
-                    ? 'Disable Wellness Reminders'
-                    : 'Enable Wellness Reminders'}
-              </div>
-              <div className="mt-1 text-xs text-sidebar-charcoal/60">
-                Eye, stand, and water nudges through the workday
-              </div>
-            </button>
-            <button
-              type="button"
-              disabled={busy || !runtimeStatus?.startupSupported}
+            />
+            <ActionCard
+              title={pendingAction === 'toggle-startup'
+                ? 'Working...'
+                : runtimeStatus?.startupEnabled
+                  ? 'Disable Startup'
+                  : 'Enable Startup'}
+              description="Packaged app only"
               onClick={() => void onToggleStartup()}
-              className="rounded-[24px] bg-white/60 p-5 text-left transition hover:bg-white"
-            >
-              <div className="font-body-md font-bold text-sidebar-charcoal">
-                {pendingAction === 'toggle-startup'
-                  ? 'Working...'
-                  : runtimeStatus?.startupEnabled
-                    ? 'Disable Startup'
-                    : 'Enable Startup'}
-              </div>
-              <div className="mt-1 text-xs text-sidebar-charcoal/60">Packaged app only</div>
-            </button>
+              disabled={busy || !runtimeStatus?.startupSupported}
+            />
             <div className="rounded-[24px] bg-white/60 p-5">
               <div className="font-label-caps text-label-caps uppercase text-sidebar-charcoal/60">Reminder Cadence</div>
               <div className="mt-3 text-lg font-semibold text-sidebar-charcoal">
@@ -253,28 +291,60 @@ export function SettingsPage({
               </div>
               <div className="mt-2 text-xs text-sidebar-charcoal/60">Morning briefing at 8:00 AM, then 30m, 5m, and 1m before each moment.</div>
             </div>
-            <div className="rounded-[24px] bg-white/60 p-5">
-              <div className="font-label-caps text-label-caps uppercase text-sidebar-charcoal/60">Wellness Cadence</div>
-              <div className="mt-3 text-lg font-semibold text-sidebar-charcoal">Eyes 20m / Stand 30m / Water 60m</div>
-              <div className="mt-2 text-xs text-sidebar-charcoal/60">
-                {runtimeStatus?.wellnessEnabled ? 'Enabled for work hours.' : 'Disabled until you turn it back on.'}
-              </div>
-            </div>
           </div>
 
-          <div className="mt-8 rounded-[24px] bg-white/50 p-5">
-            <div className="mb-3 font-label-caps text-label-caps uppercase text-sidebar-charcoal/60">
-              Selected Artifact
+          <div className="mt-6 rounded-[28px] bg-white/45 p-5">
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="font-headline-sm text-sidebar-charcoal">Wellness Reminders</div>
+                <div className="mt-1 text-sm text-sidebar-charcoal/60">Control the extra nudges separately from calendar reminders.</div>
+              </div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-sidebar-charcoal/55">
+                Eyes 20m / Stand 30m / Water 60m
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              {artifactCatalog.map((artifact) => (
-                <div
-                  key={artifact.id}
-                  className={`rounded-2xl p-3 text-center text-xs ${artifact.id === runtimeStatus?.artifactId ? 'bg-primary text-white' : 'bg-white/60 text-sidebar-charcoal'}`}
-                >
-                  {artifact.label}
-                </div>
-              ))}
+
+            <div className="space-y-3">
+              <ToggleRow
+                title="Time Awareness"
+                description="Give a simple half-hour time check all day and night."
+                enabled={Boolean(runtimeStatus?.timeAwarenessEnabled)}
+                onToggle={() => void onToggleTimeAwareness()}
+                disabled={busy}
+                busyLabel={pendingAction === 'toggle-time-awareness' ? 'Working...' : undefined}
+              />
+              <ToggleRow
+                title="All Wellness Reminders"
+                description="Master switch for eye, stand, and water nudges."
+                enabled={Boolean(runtimeStatus?.wellnessEnabled)}
+                onToggle={() => void onToggleWellness()}
+                disabled={busy}
+                busyLabel={pendingAction === 'toggle-wellness' ? 'Working...' : undefined}
+              />
+              <ToggleRow
+                title="Eye Breaks"
+                description="Show a 20-20-20 eye break reminder every 20 minutes."
+                enabled={Boolean(runtimeStatus?.eyeBreakEnabled)}
+                onToggle={() => void onToggleWellnessType('eye', !runtimeStatus?.eyeBreakEnabled)}
+                disabled={busy || !runtimeStatus?.wellnessEnabled}
+                busyLabel={pendingAction === 'toggle-wellness-eye' ? 'Working...' : undefined}
+              />
+              <ToggleRow
+                title="Stand Breaks"
+                description="Show a stand or stretch reminder every 30 minutes."
+                enabled={Boolean(runtimeStatus?.standBreakEnabled)}
+                onToggle={() => void onToggleWellnessType('stand', !runtimeStatus?.standBreakEnabled)}
+                disabled={busy || !runtimeStatus?.wellnessEnabled}
+                busyLabel={pendingAction === 'toggle-wellness-stand' ? 'Working...' : undefined}
+              />
+              <ToggleRow
+                title="Water Breaks"
+                description="Show a water reminder every 60 minutes."
+                enabled={Boolean(runtimeStatus?.waterBreakEnabled)}
+                onToggle={() => void onToggleWellnessType('water', !runtimeStatus?.waterBreakEnabled)}
+                disabled={busy || !runtimeStatus?.wellnessEnabled}
+                busyLabel={pendingAction === 'toggle-wellness-water' ? 'Working...' : undefined}
+              />
             </div>
           </div>
         </section>

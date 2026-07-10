@@ -1,4 +1,8 @@
 import { getArtifactDetails } from '../../shared/data/artifacts';
+import eyeBreakImage from '../../shared/assets/wellness/eye-break.svg';
+import standBreakImage from '../../shared/assets/wellness/stand-break.svg';
+import timeAwarenessImage from '../../shared/assets/wellness/time-awareness.svg';
+import waterBreakImage from '../../shared/assets/wellness/water-break.svg';
 import type { ReminderPayload } from '../../shared/contracts';
 
 function parseReminderSubtitle(subtitle: string) {
@@ -13,12 +17,33 @@ function parseReminderSubtitle(subtitle: string) {
   return { badge: 'Reminder', detail: subtitle };
 }
 
+function getReminderImage(reminder: ReminderPayload): { imageUrl: string; label: string } {
+  if (reminder.reminderId.startsWith('eye-break:')) {
+    return { imageUrl: eyeBreakImage, label: 'Eye Break' };
+  }
+
+  if (reminder.reminderId.startsWith('stand-break:')) {
+    return { imageUrl: standBreakImage, label: 'Stand Break' };
+  }
+
+  if (reminder.reminderId.startsWith('water-break:')) {
+    return { imageUrl: waterBreakImage, label: 'Water Break' };
+  }
+
+  if (reminder.reminderId.startsWith('time-awareness:')) {
+    return { imageUrl: timeAwarenessImage, label: 'Time Awareness' };
+  }
+
+  const artifact = getArtifactDetails(reminder.artifactId);
+  return { imageUrl: artifact.imageUrl, label: artifact.label };
+}
+
 export function OverlayPage({
   reminder,
 }: {
   reminder: ReminderPayload;
 }) {
-  const artifact = getArtifactDetails(reminder.artifactId);
+  const visual = getReminderImage(reminder);
   const meta = parseReminderSubtitle(reminder.subtitle);
 
   return (
@@ -40,7 +65,7 @@ export function OverlayPage({
           <div className="flex items-center gap-8">
             <div className="relative -mt-6 h-24 w-24">
               <div className="animate-mascot flex h-full w-full items-center justify-center">
-                <img className="h-20 w-20 object-contain drop-shadow-lg" src={artifact.imageUrl} alt={artifact.label} />
+                <img className="h-20 w-20 object-contain drop-shadow-lg" src={visual.imageUrl} alt={visual.label} />
               </div>
             </div>
 

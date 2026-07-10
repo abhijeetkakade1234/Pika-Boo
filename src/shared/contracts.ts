@@ -78,6 +78,10 @@ export interface RuntimeStatus {
   pollerRunning: boolean;
   paused: boolean;
   wellnessEnabled: boolean;
+  eyeBreakEnabled: boolean;
+  standBreakEnabled: boolean;
+  waterBreakEnabled: boolean;
+  timeAwarenessEnabled: boolean;
   reminderLeadMinutes: number;
   reminderLeadTimes: number[];
   lastPollAt: number | null;

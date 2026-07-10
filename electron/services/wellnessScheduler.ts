@@ -1,11 +1,13 @@
 import type { ReminderPayload } from '../../src/shared/contracts';
 import { getArtifactForNamedReminder } from './reminderArtifacts';
+import { getEyeBreakEnabled, getStandBreakEnabled, getTimeAwarenessEnabled, getWaterBreakEnabled, getWellnessEnabled } from './settingsStore';
 
 const DAY_START_HOUR = 9;
 const DAY_END_HOUR = 19;
 export const EYE_BREAK_INTERVAL_MINUTES = 20;
 export const STAND_BREAK_INTERVAL_MINUTES = 30;
 export const WATER_BREAK_INTERVAL_MINUTES = 60;
+export const TIME_AWARENESS_INTERVAL_MINUTES = 30;
 
 type ReminderHandler = (payload: ReminderPayload) => void;
 
@@ -36,6 +38,7 @@ export class WellnessScheduler {
   private eyeTimer: NodeJS.Timeout | null = null;
   private standTimer: NodeJS.Timeout | null = null;
   private waterTimer: NodeJS.Timeout | null = null;
+  private timeAwarenessTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly onReminder: ReminderHandler) {}
 
@@ -43,6 +46,7 @@ export class WellnessScheduler {
     this.scheduleEyeBreak();
     this.scheduleStandBreak();
     this.scheduleWaterBreak();
+    this.scheduleTimeAwareness();
   }
 
   stop(): void {
@@ -67,12 +71,14 @@ export class WellnessScheduler {
         return;
       }
 
-      this.onReminder({
-        reminderId: `eye-break:${next.toISOString()}`,
-        title: 'Relax your eyes',
-        subtitle: '20-20-20: look 20 feet away for 20 seconds.',
-        artifactId: getArtifactForNamedReminder('eye-break', 'ghost'),
-      });
+      if (getWellnessEnabled() && getEyeBreakEnabled()) {
+        this.onReminder({
+          reminderId: `eye-break:${next.toISOString()}`,
+          title: 'Relax your eyes',
+          subtitle: '20-20-20: look 20 feet away for 20 seconds.',
+          artifactId: getArtifactForNamedReminder('eye-break', 'ghost'),
+        });
+      }
       this.scheduleEyeBreak();
     }, Math.max(1_000, next.getTime() - now.getTime()));
   }
@@ -86,12 +92,14 @@ export class WellnessScheduler {
         return;
       }
 
-      this.onReminder({
-        reminderId: `stand-break:${next.toISOString()}`,
-        title: 'Stand up for a minute',
-        subtitle: 'Stand, stretch, or walk for 1 to 2 minutes.',
-        artifactId: getArtifactForNamedReminder('stand-break', 'cat'),
-      });
+      if (getWellnessEnabled() && getStandBreakEnabled()) {
+        this.onReminder({
+          reminderId: `stand-break:${next.toISOString()}`,
+          title: 'Stand up for a minute',
+          subtitle: 'Stand, stretch, or walk for 1 to 2 minutes.',
+          artifactId: getArtifactForNamedReminder('stand-break', 'train'),
+        });
+      }
       this.scheduleStandBreak();
     }, Math.max(1_000, next.getTime() - now.getTime()));
   }
@@ -105,13 +113,36 @@ export class WellnessScheduler {
         return;
       }
 
-      this.onReminder({
-        reminderId: `water-break:${next.toISOString()}`,
-        title: 'Water break',
-        subtitle: 'Take a few sips and reset before the next push.',
-        artifactId: getArtifactForNamedReminder('water-break', 'ufo'),
-      });
+      if (getWellnessEnabled() && getWaterBreakEnabled()) {
+        this.onReminder({
+          reminderId: `water-break:${next.toISOString()}`,
+          title: 'Water break',
+          subtitle: 'Take a few sips and reset before the next push.',
+          artifactId: getArtifactForNamedReminder('water-break', 'ufo'),
+        });
+      }
       this.scheduleWaterBreak();
+    }, Math.max(1_000, next.getTime() - now.getTime()));
+  }
+
+  private scheduleTimeAwareness(): void {
+    const now = new Date();
+    const next = nextSlotTime(0, TIME_AWARENESS_INTERVAL_MINUTES, now);
+    this.timeAwarenessTimer = setTimeout(() => {
+      this.timeAwarenessTimer = null;
+      if (this.paused) {
+        return;
+      }
+
+      if (getTimeAwarenessEnabled()) {
+        this.onReminder({
+          reminderId: `time-awareness:${next.toISOString()}`,
+          title: `It's ${next.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`,
+          subtitle: 'Quick time check so the day does not disappear on you.',
+          artifactId: getArtifactForNamedReminder('morning-briefing', 'rocket'),
+        });
+      }
+      this.scheduleTimeAwareness();
     }, Math.max(1_000, next.getTime() - now.getTime()));
   }
 
@@ -129,6 +160,11 @@ export class WellnessScheduler {
     if (this.waterTimer) {
       clearTimeout(this.waterTimer);
       this.waterTimer = null;
+    }
+
+    if (this.timeAwarenessTimer) {
+      clearTimeout(this.timeAwarenessTimer);
+      this.timeAwarenessTimer = null;
     }
   }
 }

@@ -67,7 +67,6 @@ function ControlPanelEntry() {
             busy={desktop.busy}
             pendingAction={desktop.pendingAction}
             onPollNow={desktop.pollNow}
-            onOpenSettings={() => setActiveScreen('settings')}
           />
         );
       case 'flights':
@@ -114,6 +113,8 @@ function ControlPanelEntry() {
             onToggleStartup={desktop.toggleStartup}
             onTogglePaused={desktop.togglePaused}
             onToggleWellness={desktop.toggleWellness}
+            onToggleWellnessType={desktop.toggleWellnessType}
+            onToggleTimeAwareness={desktop.toggleTimeAwareness}
             onPollNow={desktop.pollNow}
             onSaveSelectedCalendars={desktop.saveSelectedCalendars}
           />

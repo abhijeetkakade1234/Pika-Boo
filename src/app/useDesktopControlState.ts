@@ -21,6 +21,10 @@ export function useDesktopControlState() {
     return typeof window.pikaBoo.getThemeRules === 'function' && typeof window.pikaBoo.setThemeRule === 'function';
   }
 
+  function canUseTimeAwareness(): boolean {
+    return typeof window.pikaBoo.setTimeAwarenessEnabled === 'function';
+  }
+
   async function refresh() {
     const themeRulesPromise = canUseThemeRules()
       ? window.pikaBoo.getThemeRules()
@@ -128,6 +132,20 @@ export function useDesktopControlState() {
         const status = await window.pikaBoo.setWellnessEnabled(!runtimeStatus?.wellnessEnabled);
         setRuntimeStatus(status);
       }, 'Failed to update wellness reminders.', 'toggle-wellness'),
+    toggleWellnessType: (kind: 'eye' | 'stand' | 'water', enabled: boolean) =>
+      runTask(async () => {
+        const status = await window.pikaBoo.setWellnessTypeEnabled(kind, enabled);
+        setRuntimeStatus(status);
+      }, 'Failed to update wellness reminder type.', `toggle-wellness-${kind}`),
+    toggleTimeAwareness: () =>
+      runTask(async () => {
+        if (!canUseTimeAwareness()) {
+          throw new Error('Restart Pika-Boo to load the new Time Awareness toggle.');
+        }
+
+        const status = await window.pikaBoo.setTimeAwarenessEnabled(!runtimeStatus?.timeAwarenessEnabled);
+        setRuntimeStatus(status);
+      }, 'Failed to update time awareness reminders.', 'toggle-time-awareness'),
     saveArtifact: (nextArtifactId: ArtifactId) =>
       runTask(async () => {
         setArtifactId(nextArtifactId);

@@ -69,6 +69,11 @@ function getDb(): DatabaseSync {
       artifact_id TEXT NOT NULL
     ) STRICT;
 
+    CREATE TABLE IF NOT EXISTS app_settings (
+      setting_key TEXT PRIMARY KEY,
+      setting_value TEXT NOT NULL
+    ) STRICT;
+
     CREATE INDEX IF NOT EXISTS idx_reminder_history_delivered_at
       ON reminder_history(delivered_at DESC);
 
@@ -300,6 +305,31 @@ export function listRecentReminders(limit = 25): ReminderDeliverySummary[] {
 
 export function clearReminderHistory(): void {
   getDb().prepare('DELETE FROM reminder_history').run();
+}
+
+export function getAppSettingValue(settingKey: string): string | null {
+  const row = getDb()
+    .prepare(`
+      SELECT setting_value AS settingValue
+      FROM app_settings
+      WHERE setting_key = ?
+    `)
+    .get(settingKey) as Record<string, unknown> | undefined;
+
+  return row?.settingValue ? String(row.settingValue) : null;
+}
+
+export function setAppSettingValue(settingKey: string, settingValue: string): void {
+  getDb()
+    .prepare(`
+      INSERT INTO app_settings (
+        setting_key,
+        setting_value
+      ) VALUES (?, ?)
+      ON CONFLICT(setting_key) DO UPDATE SET
+        setting_value = excluded.setting_value
+    `)
+    .run(settingKey, settingValue);
 }
 
 export function listEventTimeline(limit = 200): CalendarEventTimelineEntry[] {
