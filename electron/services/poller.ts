@@ -1,5 +1,6 @@
 import type { CalendarEventSummary, CalendarListEntry, ReminderPayload, RuntimeStatus } from '../../src/shared/contracts';
 import { listCalendars, listUpcomingEvents } from './googleAuth';
+import { getArtifactForEvent, getArtifactForNamedReminder } from './reminderArtifacts';
 import {
   getArtifactId,
   getGoogleOAuthConfig,
@@ -28,7 +29,7 @@ function buildReminder(event: CalendarEventSummary, leadMinutes: number): Remind
     reminderId: reminderKey(event, leadMinutes),
     title: event.summary,
     subtitle: `Starts in ${leadMinutes} minute${leadMinutes === 1 ? '' : 's'} | ${event.calendarSummary}`,
-    artifactId: getArtifactId(),
+    artifactId: getArtifactForEvent(event),
     meetingUrl: event.meetingUrl,
   };
 }
@@ -276,7 +277,7 @@ export class CalendarPoller {
           reminderId: `morning-briefing:${todayKey}`,
           title: digest.title,
           subtitle: digest.subtitle,
-          artifactId: 'rocket',
+          artifactId: getArtifactForNamedReminder(digest.title, 'rocket'),
           meetingUrl: digest.meetingUrl,
         });
       }, 10_000);
@@ -302,7 +303,7 @@ export class CalendarPoller {
         reminderId: `morning-briefing:${nextDayKey}`,
         title: digest.title,
         subtitle: digest.subtitle,
-        artifactId: 'rocket',
+        artifactId: getArtifactForNamedReminder(digest.title, 'rocket'),
         meetingUrl: digest.meetingUrl,
       });
     }, nextMorning.getTime() - now.getTime());
