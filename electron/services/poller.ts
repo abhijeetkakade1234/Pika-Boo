@@ -16,7 +16,7 @@ import {
   saveSelectedCalendarIds,
 } from './settingsStore';
 
-const POLL_INTERVAL_MS = 60_000;
+const POLL_INTERVAL_MS = 5 * 60_000;
 const LOOKAHEAD_MS = 30 * 24 * 60 * 60_000;
 const MORNING_BRIEFING_HOUR = 8;
 const MORNING_BRIEFING_CATCHUP_END_HOUR = 11;

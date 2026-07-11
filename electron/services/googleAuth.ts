@@ -18,6 +18,7 @@ const GOOGLE_SCOPES = [
 ].join(' ');
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
+const METADATA_CACHE_TTL_MS = 60 * 60 * 1000;
 
 interface StoredTokens {
   accessToken: string;
@@ -95,6 +96,9 @@ interface GoogleTask {
 interface TasksListResponse {
   items?: GoogleTask[];
 }
+
+let calendarListCache: { fetchedAt: number; items: GoogleCalendarListItem[] } | null = null;
+let taskListCache: { fetchedAt: number; items: GoogleTaskList[] } | null = null;
 
 function toLocalAnchorIso(dateText: string, hour: number): string {
   const [year, month, day] = dateText.split('-').map(Number);
@@ -371,6 +375,9 @@ export function clearGoogleTokens(): AuthStatus {
     fs.unlinkSync(tokenPath);
   }
 
+  calendarListCache = null;
+  taskListCache = null;
+
   return getAuthStatus(null);
 }
 
@@ -398,14 +405,21 @@ export async function listCalendars(
   config: GoogleOAuthConfig,
   selectedCalendarIds: string[],
 ): Promise<CalendarListEntry[]> {
-  const url = new URL('https://www.googleapis.com/calendar/v3/users/me/calendarList');
-  url.searchParams.set('minAccessRole', 'reader');
-  url.searchParams.set('showHidden', 'false');
+  const now = Date.now();
+  if (!calendarListCache || now - calendarListCache.fetchedAt >= METADATA_CACHE_TTL_MS) {
+    const url = new URL('https://www.googleapis.com/calendar/v3/users/me/calendarList');
+    url.searchParams.set('minAccessRole', 'reader');
+    url.searchParams.set('showHidden', 'false');
 
-  const payload = await fetchGoogleJson<CalendarListResponse>(config, url);
+    const payload = await fetchGoogleJson<CalendarListResponse>(config, url);
+    calendarListCache = {
+      fetchedAt: now,
+      items: payload.items ?? [],
+    };
+  }
   const selectedIds = new Set(selectedCalendarIds);
 
-  return (payload.items ?? [])
+  return (calendarListCache.items ?? [])
     .filter((calendar) => Boolean(calendar.id))
     .map((calendar) => ({
       id: calendar.id,
@@ -415,6 +429,21 @@ export async function listCalendars(
       backgroundColor: calendar.backgroundColor,
     }))
     .sort((left, right) => Number(right.primary) - Number(left.primary) || left.summary.localeCompare(right.summary));
+}
+
+async function listTaskLists(config: GoogleOAuthConfig): Promise<GoogleTaskList[]> {
+  const now = Date.now();
+  if (!taskListCache || now - taskListCache.fetchedAt >= METADATA_CACHE_TTL_MS) {
+    const taskListsUrl = new URL('https://tasks.googleapis.com/tasks/v1/users/@me/lists');
+    taskListsUrl.searchParams.set('maxResults', '100');
+    const taskLists = await fetchGoogleJson<TaskListsResponse>(config, taskListsUrl);
+    taskListCache = {
+      fetchedAt: now,
+      items: taskLists.items ?? [],
+    };
+  }
+
+  return taskListCache.items;
 }
 
 export async function listUpcomingEvents(
@@ -470,12 +499,10 @@ export async function listUpcomingEvents(
   let taskEvents: CalendarEventSummary[] = [];
 
   try {
-    const taskListsUrl = new URL('https://tasks.googleapis.com/tasks/v1/users/@me/lists');
-    taskListsUrl.searchParams.set('maxResults', '100');
-    const taskLists = await fetchGoogleJson<TaskListsResponse>(config, taskListsUrl);
+    const taskLists = await listTaskLists(config);
 
     const taskPayloads = await Promise.all(
-      (taskLists.items ?? []).map(async (taskList) => {
+      taskLists.map(async (taskList) => {
         if (!taskList.id) {
           return null;
         }
@@ -525,6 +552,8 @@ export async function listUpcomingEvents(
     if (!isScopeOrApiAvailabilityError(error)) {
       throw error;
     }
+
+    console.warn('Google Tasks could not be loaded. Reconnect Google once and make sure the Tasks API is enabled for this project.', error);
   }
 
   return [...calendarEvents, ...taskEvents].sort(
