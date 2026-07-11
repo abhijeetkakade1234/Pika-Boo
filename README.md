@@ -4,21 +4,37 @@ Pika-Boo is a Windows desktop reminder app that makes calendar events hard to mi
 
 Instead of standard notifications, it shows a moving banner across the top of the screen so your eyes catch the motion while you work.
 
-## Screenshots
+## Product Walkthrough
 
-<p align="center">
-  <img src="docs/screenshots/dashboard.png" alt="Pika-Boo dashboard" width="48%" />
-  <img src="docs/screenshots/moments.png" alt="Pika-Boo moments page" width="48%" />
-</p>
+### Live Reminder Overlay
 
-<p align="center">
-  <img src="docs/screenshots/themes.png" alt="Pika-Boo themes page" width="48%" />
-  <img src="docs/screenshots/overlay.png" alt="Pika-Boo overlay reminder" width="48%" />
-</p>
+This is the core product moment: a reminder cuts across the top of the screen so you notice motion instead of ignoring another silent notification.
 
-<p align="center">
-  <img src="docs/screenshots/settings.png" alt="Pika-Boo settings page with sanitized mock OAuth values" width="80%" />
-</p>
+![Pika-Boo overlay reminder](docs/screenshots/overlay.png)
+
+### Dashboard
+
+The dashboard is the control tower. It shows the next reminder window, upcoming calendar items, pending tasks, and recent reminder deliveries in one place.
+
+![Pika-Boo dashboard](docs/screenshots/dashboard.png)
+
+### Moments
+
+Moments is the calendar-focused view. It shows the selected calendars and the real upcoming events/tasks that the reminder engine is watching.
+
+![Pika-Boo moments page](docs/screenshots/moments.png)
+
+### Themes
+
+Themes controls how reminders look. You can set the default artifact, map event types like meetings or birthdays to specific visuals, and tune the app's personality without changing the reminder engine.
+
+![Pika-Boo themes page](docs/screenshots/themes.png)
+
+### Settings
+
+Settings is where Google Calendar connection, startup behavior, polling, and wellness/time-awareness toggles live.
+
+![Pika-Boo settings page with sanitized mock OAuth values](docs/screenshots/settings.png)
 
 Settings screenshots use sanitized mock data so no live OAuth keys or private config are exposed.
 

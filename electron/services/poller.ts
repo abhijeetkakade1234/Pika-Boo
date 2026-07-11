@@ -20,7 +20,6 @@ const POLL_INTERVAL_MS = 60_000;
 const LOOKAHEAD_MS = 30 * 24 * 60 * 60_000;
 const MORNING_BRIEFING_HOUR = 8;
 const MORNING_BRIEFING_CATCHUP_END_HOUR = 11;
-const IMMEDIATE_TRIGGER_GRACE_MS = 90_000;
 export const EVENT_REMINDER_LEAD_TIMES = [30, 5, 1];
 
 type OverlayHandler = (payload: ReminderPayload) => void;
@@ -230,7 +229,7 @@ export class CalendarPoller {
         }
 
         if (fireAt <= nowMs) {
-          if (nowMs - fireAt <= IMMEDIATE_TRIGGER_GRACE_MS && startMs > nowMs) {
+          if (startMs > nowMs) {
             this.shown.set(key, fireAt);
             this.clearScheduledKey(key);
             this.onReminder(buildReminder(event, leadMinutes));
