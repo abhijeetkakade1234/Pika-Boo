@@ -11,7 +11,7 @@ export const TIME_AWARENESS_INTERVAL_MINUTES = 30;
 
 type ReminderHandler = (payload: ReminderPayload) => void;
 
-function nextSlotTime(anchorHour: number, intervalMinutes: number, now: Date): Date {
+function nextSlotTime(anchorHour: number, intervalMinutes: number, now: Date, endHour?: number): Date {
   const start = new Date(now);
   start.setHours(anchorHour, 0, 0, 0);
 
@@ -23,7 +23,7 @@ function nextSlotTime(anchorHour: number, intervalMinutes: number, now: Date): D
   const nextMinutes = (Math.floor(minutesSinceStart / intervalMinutes) + 1) * intervalMinutes;
   const next = new Date(start.getTime() + nextMinutes * 60_000);
 
-  if (next.getHours() >= DAY_END_HOUR) {
+  if (typeof endHour === 'number' && next.getHours() >= endHour) {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(anchorHour, 0, 0, 0);
@@ -64,7 +64,7 @@ export class WellnessScheduler {
 
   private scheduleEyeBreak(): void {
     const now = new Date();
-    const next = nextSlotTime(DAY_START_HOUR, EYE_BREAK_INTERVAL_MINUTES, now);
+    const next = nextSlotTime(DAY_START_HOUR, EYE_BREAK_INTERVAL_MINUTES, now, DAY_END_HOUR);
     this.eyeTimer = setTimeout(() => {
       this.eyeTimer = null;
       if (this.paused) {
@@ -85,7 +85,7 @@ export class WellnessScheduler {
 
   private scheduleStandBreak(): void {
     const now = new Date();
-    const next = nextSlotTime(DAY_START_HOUR, STAND_BREAK_INTERVAL_MINUTES, now);
+    const next = nextSlotTime(DAY_START_HOUR, STAND_BREAK_INTERVAL_MINUTES, now, DAY_END_HOUR);
     this.standTimer = setTimeout(() => {
       this.standTimer = null;
       if (this.paused) {
@@ -106,7 +106,7 @@ export class WellnessScheduler {
 
   private scheduleWaterBreak(): void {
     const now = new Date();
-    const next = nextSlotTime(DAY_START_HOUR, WATER_BREAK_INTERVAL_MINUTES, now);
+    const next = nextSlotTime(DAY_START_HOUR, WATER_BREAK_INTERVAL_MINUTES, now, DAY_END_HOUR);
     this.waterTimer = setTimeout(() => {
       this.waterTimer = null;
       if (this.paused) {

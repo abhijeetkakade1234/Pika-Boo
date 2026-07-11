@@ -54,8 +54,10 @@ const isSmokeTest = process.argv.includes('--smoke-test') || process.env.PIKA_BO
 const gotSingleInstanceLock = app.requestSingleInstanceLock();
 let mainWindow: BrowserWindow | null = null;
 let overlayWindow: BrowserWindow | null = null;
+let splashWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let overlayHideTimer: NodeJS.Timeout | null = null;
+let splashFallbackTimer: NodeJS.Timeout | null = null;
 let currentReminder: ReminderPayload | null = null;
 const snoozeTimers = new Map<string, NodeJS.Timeout>();
 const poller = new CalendarPoller(
@@ -104,13 +106,27 @@ function createMainWindow(startHidden = false): BrowserWindow {
     icon: getBundledAssetPath('pika-boo-logo.png'),
     autoHideMenuBar: true,
     backgroundColor: '#12141a',
-    show: !startHidden,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
 
   window.loadURL(getRendererUrl());
+
+  window.once('ready-to-show', () => {
+    if (splashFallbackTimer) {
+      clearTimeout(splashFallbackTimer);
+      splashFallbackTimer = null;
+    }
+
+    splashWindow?.close();
+    splashWindow = null;
+
+    if (!startHidden) {
+      window.show();
+    }
+  });
 
   window.on('close', (event) => {
     if (!app.isQuiting && !isSmokeTest) {
@@ -119,6 +135,41 @@ function createMainWindow(startHidden = false): BrowserWindow {
     }
   });
 
+  return window;
+}
+
+function createSplashWindow(): BrowserWindow {
+  const window = new BrowserWindow({
+    width: 480,
+    height: 520,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    show: true,
+    center: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    backgroundColor: '#00000000',
+  });
+
+  const logoUrl = pathToFileURL(getBundledAssetPath('pika-boo-logo.png')).toString();
+  const html = `
+    <!doctype html>
+    <html>
+      <body style="margin:0;display:grid;place-items:center;width:100vw;height:100vh;background:transparent;font-family:Segoe UI,sans-serif;">
+        <div style="width:420px;border-radius:32px;padding:24px 24px 28px;background:rgba(255,250,242,0.96);box-shadow:0 24px 60px rgba(28,20,44,0.18);text-align:center;">
+          <img src="${logoUrl}" alt="Pika-Boo" style="width:100%;display:block;" />
+          <div style="margin-top:10px;font-size:12px;letter-spacing:0.28em;font-weight:700;color:#5d5667;text-transform:uppercase;">Ambient Reminders</div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
   return window;
 }
 
@@ -565,8 +616,23 @@ async function bootstrap(): Promise<void> {
   ensureStartupEnabledByDefault();
   const startHidden = process.argv.includes('--hidden');
 
+  if (!startHidden && !isSmokeTest) {
+    splashWindow = createSplashWindow();
+  }
+
   mainWindow = createMainWindow(startHidden);
   overlayWindow = createOverlayWindow();
+
+  if (splashWindow) {
+    splashFallbackTimer = setTimeout(() => {
+      splashWindow?.close();
+      splashWindow = null;
+      if (!startHidden) {
+        mainWindow?.show();
+      }
+    }, 8000);
+  }
+
   wireTray();
   wireIpc();
   restoreSnoozedReminders();
