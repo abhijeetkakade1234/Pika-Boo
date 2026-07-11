@@ -20,6 +20,7 @@ const POLL_INTERVAL_MS = 5 * 60_000;
 const LOOKAHEAD_MS = 30 * 24 * 60 * 60_000;
 const MORNING_BRIEFING_HOUR = 8;
 const MORNING_BRIEFING_CATCHUP_END_HOUR = 11;
+const MAX_TIMEOUT_MS = 2_147_483_647;
 export const EVENT_REMINDER_LEAD_TIMES = [30, 5, 1];
 
 type OverlayHandler = (payload: ReminderPayload) => void;
@@ -241,6 +242,11 @@ export class CalendarPoller {
           continue;
         }
 
+        const delayMs = fireAt - nowMs;
+        if (delayMs > MAX_TIMEOUT_MS) {
+          continue;
+        }
+
         const timer = setTimeout(() => {
           this.scheduled.delete(key);
           if (this.paused || this.shown.has(key)) {
@@ -250,7 +256,7 @@ export class CalendarPoller {
           this.shown.set(key, fireAt);
           this.onReminder(buildReminder(event, leadMinutes));
           this.onStatusChange();
-        }, fireAt - nowMs);
+        }, delayMs);
 
         this.scheduled.set(key, timer);
       }

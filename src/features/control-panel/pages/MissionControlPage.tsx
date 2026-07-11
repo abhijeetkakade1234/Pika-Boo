@@ -16,6 +16,19 @@ function minutesUntil(startAt: string | undefined): string {
   return `${String(hours).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
 }
 
+function formatMomentDate(startAt: string | undefined): string {
+  if (!startAt) {
+    return '--';
+  }
+
+  return new Date(startAt).toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
 function describeRuntime(authStatus: AuthStatus | null, runtimeStatus: RuntimeStatus | null): string {
   if (!authStatus?.configured) {
     return 'Add your Google desktop client in Settings to start syncing.';
@@ -123,10 +136,7 @@ export function MissionControlPage({
               </h2>
               <p className="text-card-copy max-w-xl font-body-lg text-body-lg text-sidebar-charcoal/70">
                 {nextEvent
-                  ? `${nextMomentKind ? `${nextMomentKind} | ` : ''}${nextEvent.calendarSummary} at ${new Date(nextEvent.startAt).toLocaleTimeString([], {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                    })}. The overlay fires at ${reminderCadence.join('m, ')}m before start.`
+                  ? `${nextMomentKind ? `${nextMomentKind} | ` : ''}${nextEvent.calendarSummary} on ${formatMomentDate(nextEvent.startAt)}. The overlay fires at ${reminderCadence.join('m, ')}m before start.`
                   : describeRuntime(authStatus, runtimeStatus)}
               </p>
               {nextEvent ? (

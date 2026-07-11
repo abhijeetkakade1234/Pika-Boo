@@ -109,7 +109,7 @@ export function FlightsPage({
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="text-sm text-sidebar-charcoal/60">
-                        {new Date(reminder.deliveredAt).toLocaleString([], {
+                        Delivered {new Date(reminder.deliveredAt).toLocaleString([], {
                           month: 'short',
                           day: 'numeric',
                           hour: 'numeric',
